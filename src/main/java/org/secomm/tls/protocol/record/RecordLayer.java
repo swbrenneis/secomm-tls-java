@@ -1,6 +1,9 @@
 package org.secomm.tls.protocol.record;
 
+import org.secomm.tls.crypto.Algorithms;
 import org.secomm.tls.protocol.SecurityParameters;
+
+import java.security.SecureRandom;
 
 /**
  * The record layer manages handshaking and keeps track of
@@ -22,18 +25,27 @@ public class RecordLayer {
 
     private final ProtocolVersion version;
 
+    private final SecureRandom secureRandom;
+
     private SecurityParameters pendingCipherSpec;
 
     private SecurityParameters currentCipherSpec;
 
-    public RecordLayer(ProtocolVersion version) {
+    public RecordLayer(ProtocolVersion version, SecureRandom secureRandom) {
         this.version = version;
+        this.secureRandom = secureRandom;
     }
 
     public void sendClientHello() {
 
         ClientHello clientHello = new ClientHello();
-//        clientHello.setRandom((int) (System.currentTimeMillis() / 1000),);
+        byte[] randomBytes = new byte[28];
+        secureRandom.nextBytes(randomBytes);
+        clientHello.setRandom((int) (System.currentTimeMillis() / 1000), randomBytes);
     }
 
+    private void initializeSecurityParameters() {
+        pendingCipherSpec = new SecurityParameters(SecurityParameters.ConnectionEnd.CLIENT);
+        pendingCipherSpec.setPrfAlgorithm(Algorithms.getPrfAlgorithm(Algorithms.PrfAlgorithms.TLS_PRF_SHA256));
+    }
 }

@@ -1,26 +1,21 @@
 package org.secomm.tls.protocol;
 
+import org.secomm.tls.crypto.Algorithms;
+import org.secomm.tls.crypto.PRFAlgorithm;
+
 import java.util.Arrays;
 
 public class SecurityParameters {
 
     public enum ConnectionEnd { CLIENT, SERVER }
 
-    public enum PRFAlgorithm { TLS_PRF_SHA256 }
-
-    public enum BulkCipherAlgorithm { NULL, RC4, TRIPLE_DES, AES }
-
-    public enum CipherType { STREAM, BLOCK, AEAD }
-
-    public enum MACAlgorithm{ NULL, HMAC_MD5, HMAC_SHA1, HMAC_SHA256, HMAC_SHA384, HMAC_SHA512 }
-
     private final ConnectionEnd entity;
 
     private PRFAlgorithm prfAlgorithm;
 
-    private BulkCipherAlgorithm bulkCipherAlgorithm;
+    private Algorithms.BulkCipherAlgorithm bulkCipherAlgorithm;
 
-    private CipherType cipherType;
+    private Algorithms.CipherType cipherType;
 
     private int encryptionKeyLength;
 
@@ -30,7 +25,7 @@ public class SecurityParameters {
 
     private int recordIvLength;
 
-    private MACAlgorithm macAlgorithm;
+    private Algorithms.MACAlgorithm macAlgorithm;
 
     private int macLength;
 
@@ -72,19 +67,19 @@ public class SecurityParameters {
         this.prfAlgorithm = prfAlgorithm;
     }
 
-    public BulkCipherAlgorithm getBulkCipherAlgorithm() {
+    public Algorithms.BulkCipherAlgorithm getBulkCipherAlgorithm() {
         return bulkCipherAlgorithm;
     }
 
-    public void setBulkCipherAlgorithm(BulkCipherAlgorithm bulkCipherAlgorithm) {
+    public void setBulkCipherAlgorithm(Algorithms.BulkCipherAlgorithm bulkCipherAlgorithm) {
         this.bulkCipherAlgorithm = bulkCipherAlgorithm;
     }
 
-    public CipherType getCipherType() {
+    public Algorithms.CipherType getCipherType() {
         return cipherType;
     }
 
-    public void setCipherType(CipherType cipherType) {
+    public void setCipherType(Algorithms.CipherType cipherType) {
         this.cipherType = cipherType;
     }
 
@@ -120,11 +115,11 @@ public class SecurityParameters {
         this.recordIvLength = recordIvLength;
     }
 
-    public MACAlgorithm getMacAlgorithm() {
+    public Algorithms.MACAlgorithm getMacAlgorithm() {
         return macAlgorithm;
     }
 
-    public void setMacAlgorithm(MACAlgorithm macAlgorithm) {
+    public void setMacAlgorithm(Algorithms.MACAlgorithm macAlgorithm) {
         this.macAlgorithm = macAlgorithm;
     }
 
