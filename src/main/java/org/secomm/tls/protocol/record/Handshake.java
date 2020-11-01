@@ -29,6 +29,13 @@ public abstract class Handshake {
         this.length = length;
     }
 
+    protected Handshake(byte handshakeType, byte[] encoding) {
+        this.handshakeType = handshakeType;
+        decode(encoding);
+    }
+
+    protected abstract void decode(byte[] encoding);
+
     public abstract byte[] getEncoded();
 
     protected ByteBuffer encodeHeader() {

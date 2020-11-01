@@ -1,7 +1,10 @@
 package org.secomm.tls.protocol.record;
 
+import org.secomm.tls.protocol.record.extensions.HelloExtension;
+
 import java.nio.ByteBuffer;
 import java.security.InvalidParameterException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ClientHello extends Handshake {
@@ -35,6 +38,59 @@ public class ClientHello extends Handshake {
 
         // This may or may not get set later.
         sessionId = new byte[0];
+    }
+
+    public ClientHello(byte[] encoding) {
+        super(CLIENT_HELLO, encoding);
+    }
+
+    @Override
+    protected void decode(byte[] encoding) {
+
+        ByteBuffer encoded = ByteBuffer.wrap(encoding);
+
+        // Version
+        byte majorVersion = encoded.get();
+        byte minorVersion = encoded.get();
+        version = new RecordLayer.ProtocolVersion(majorVersion, minorVersion);
+
+        // Client random
+        gmtUnixTime = encoded.getInt();
+        byte clientRandomLength = encoded.get();
+        clientRandom = new byte[clientRandomLength];
+        encoded.get(clientRandom);
+
+        // Session ID
+        short sessionIdLength = encoded.getShort();
+        if (sessionIdLength > 0) {
+            sessionId = new byte[sessionIdLength];
+            encoded.get(sessionId);
+        }
+
+        // Cipher suites
+        short cipherSuitesLength = encoded.getShort();
+        cipherSuites = new ArrayList<>();
+        while (cipherSuites.size() < cipherSuitesLength / 2) {
+            byte[] cipherSuite = new byte[2];
+            encoded.get(cipherSuite);
+            cipherSuites.add(cipherSuite);
+        }
+
+        // Compression method
+        compressionMethod = encoded.get();
+
+        // Extensions
+        extensions = new ArrayList<>();
+        short extensionsLength = encoded.getShort();
+        int byteCount = 0;
+        while (byteCount < extensionsLength) {
+            byte extensionType = encoded.get();
+            short extensionDataLength = encoded.getShort();
+            byte[] extensionData = new byte[extensionDataLength];
+            encoded.get(extensionData);
+            extensions.add(new HelloExtension(extensionType, extensionData));
+            byteCount += extensionDataLength + 3;
+        }
     }
 
     @Override

@@ -1,4 +1,4 @@
-package org.secomm.tls.protocol.record;
+package org.secomm.tls.protocol.record.extensions;
 
 import java.nio.ByteBuffer;
 
@@ -18,6 +18,7 @@ public class HelloExtension {
     public byte[] getEncoded() {
         ByteBuffer encoded = ByteBuffer.allocate(extensionData.length + 1);
         encoded.put(extensionType);
+        encoded.putShort((short) extensionData.length);
         encoded.put(extensionData);
         return encoded.array();
     }
