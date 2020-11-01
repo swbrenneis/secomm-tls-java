@@ -8,7 +8,7 @@ public class TlsPlaintextRecord extends TlsRecord {
         super(contentType, version);
     }
 
-    public TlsPlaintextRecord(byte[] encoded) throws InvalidContentType, InvalidEncodingException {
+    public TlsPlaintextRecord(byte[] encoded) throws InvalidContentType, InvalidEncodingException, InvalidHandshakeType {
 
         ByteBuffer encoding = ByteBuffer.wrap(encoded);
         contentType = encoding.get();
@@ -32,6 +32,10 @@ public class TlsPlaintextRecord extends TlsRecord {
         encoded.put(encoding);
 
         return encoded.array();
+    }
+
+    public void setContent(byte[] content) throws InvalidContentType, InvalidEncodingException, InvalidHandshakeType {
+        fragment = ContentFactory.getContent(contentType, content);
     }
 
 }

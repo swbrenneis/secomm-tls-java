@@ -1,8 +1,12 @@
 package org.secomm.tls.protocol.record;
 
 import org.secomm.tls.crypto.Algorithms;
+import org.secomm.tls.protocol.CipherSuites;
 import org.secomm.tls.protocol.SecurityParameters;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.SecureRandom;
 
 /**
@@ -36,12 +40,22 @@ public class RecordLayer {
         this.secureRandom = secureRandom;
     }
 
-    public void sendClientHello() {
+    public void sendClientHello(OutputStream out) throws IOException {
 
+        TlsPlaintextRecord record = new TlsPlaintextRecord(TlsRecord.HANDSHAKE, new ProtocolVersion((byte) 0x03, (byte) 0x03));
         ClientHello clientHello = new ClientHello();
-        byte[] randomBytes = new byte[28];
+        byte[] randomBytes = new byte[ClientHello.CLIENT_RANDOM_LENGTH];
         secureRandom.nextBytes(randomBytes);
-        clientHello.setRandom((int) (System.currentTimeMillis() / 1000), randomBytes);
+        clientHello.setClientRandom(randomBytes);
+        clientHello.setCipherSuites(CipherSuites.defaultCipherSuites);
+
+        HandshakeFragmentImpl handshakeFragment = new HandshakeFragmentImpl(AbstractHandshake.CLIENT_HELLO, clientHello);
+
+        out.write(record.getEncoded());
+    }
+
+    public TlsPlaintextRecord readRecord(InputStream in) {
+        return null;
     }
 
     private void initializeSecurityParameters() {

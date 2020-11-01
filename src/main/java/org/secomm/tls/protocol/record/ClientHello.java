@@ -7,23 +7,21 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClientHello extends Handshake {
+public class ClientHello extends AbstractHandshake {
+
+    public static final class Builder implements HandshakeContentFactory.HandshakeBuilder<ClientHello> {
+        public ClientHello build(byte[] encoding) { return new ClientHello(encoding); }
+    }
+
+    public static final int CLIENT_RANDOM_LENGTH = 32;
 
     private RecordLayer.ProtocolVersion version;
 
-    private int gmtUnixTime;
-
-    private byte clientRandomLength;
-
     private byte[] clientRandom;
-
-    private short sessionIdLength;
 
     private byte[] sessionId;
 
-    private short cipherSuitesLength;
-
-    private List<byte[]> cipherSuites;
+    private List<Short> cipherSuites;
 
     private byte compressionMethod;
 
@@ -38,6 +36,8 @@ public class ClientHello extends Handshake {
 
         // This may or may not get set later.
         sessionId = new byte[0];
+        cipherSuites = new ArrayList<>();
+        extensions = new ArrayList<>();
     }
 
     public ClientHello(byte[] encoding) {
@@ -55,13 +55,12 @@ public class ClientHello extends Handshake {
         version = new RecordLayer.ProtocolVersion(majorVersion, minorVersion);
 
         // Client random
-        gmtUnixTime = encoded.getInt();
-        byte clientRandomLength = encoded.get();
-        clientRandom = new byte[clientRandomLength];
+//        gmtUnixTime = encoded.getInt();
+        clientRandom = new byte[CLIENT_RANDOM_LENGTH];
         encoded.get(clientRandom);
 
         // Session ID
-        short sessionIdLength = encoded.getShort();
+        byte sessionIdLength = encoded.get();
         if (sessionIdLength > 0) {
             sessionId = new byte[sessionIdLength];
             encoded.get(sessionId);
@@ -71,8 +70,7 @@ public class ClientHello extends Handshake {
         short cipherSuitesLength = encoded.getShort();
         cipherSuites = new ArrayList<>();
         while (cipherSuites.size() < cipherSuitesLength / 2) {
-            byte[] cipherSuite = new byte[2];
-            encoded.get(cipherSuite);
+            short cipherSuite = encoded.getShort();
             cipherSuites.add(cipherSuite);
         }
 
@@ -81,15 +79,18 @@ public class ClientHello extends Handshake {
 
         // Extensions
         extensions = new ArrayList<>();
-        short extensionsLength = encoded.getShort();
-        int byteCount = 0;
-        while (byteCount < extensionsLength) {
-            byte extensionType = encoded.get();
-            short extensionDataLength = encoded.getShort();
-            byte[] extensionData = new byte[extensionDataLength];
-            encoded.get(extensionData);
-            extensions.add(new HelloExtension(extensionType, extensionData));
-            byteCount += extensionDataLength + 3;
+        extensionsPresent = encoded.get();
+        if (extensionsPresent > 0) {
+            short extensionsLength = encoded.getShort();
+            int byteCount = 0;
+            while (byteCount < extensionsLength) {
+                byte extensionType = encoded.get();
+                short extensionDataLength = encoded.getShort();
+                byte[] extensionData = new byte[extensionDataLength];
+                encoded.get(extensionData);
+                extensions.add(new HelloExtension(extensionType, extensionData));
+                byteCount += extensionDataLength + 3;
+            }
         }
     }
 
@@ -99,15 +100,12 @@ public class ClientHello extends Handshake {
         ByteBuffer encoded = encodeHeader();
         encoded.put(version.majorVersion);
         encoded.put(version.minorVersion);
-        encoded.putInt(gmtUnixTime);
-        encoded.put(clientRandomLength);
         encoded.put(clientRandom);
-        encoded.putShort(sessionIdLength);
+        encoded.putShort((short) sessionId.length);
         encoded.put(sessionId);
-        encoded.putShort(cipherSuitesLength);
         encoded.putShort((short) (cipherSuites.size() * 2));
-        for (byte[] cipherSuite : cipherSuites) {
-            encoded.put(cipherSuite);
+        for (Short cipherSuite : cipherSuites) {
+            encoded.putShort(cipherSuite);
         }
         encoded.put(compressionMethod);
         encoded.put(extensionsPresent);
@@ -119,37 +117,16 @@ public class ClientHello extends Handshake {
     }
 
     private void calculateLengths() {
-        length = 2;                     // version
-        length += 4;                    // gmtUnixTime
-        length += 1;                    // clientRandomLength
-        clientRandomLength = (byte) clientRandom.length;
-        length += clientRandomLength;
-        length += 1;                    // sessionId length
-        sessionIdLength = (short) sessionId.length;
-        length += sessionIdLength;
-        length += 2;                    // cipherSuites length
-        length += cipherSuitesLength;
-        length += 2;                    // compressionMethod and extensions present
-        length += 2;                    // extensionsLength
+        extensionsLength = 0;
         for (HelloExtension extension : extensions) {
-            cipherSuitesLength += extension.getEncoded().length;
+            extensionsLength += extension.getExtensionData().length + 1;
         }
-        length += cipherSuitesLength;
-    }
-
-    public void setRandom(int gmtUnixTime, byte[] clientRandom) {
-        if (clientRandom.length != 28) {
-            throw new InvalidParameterException("Invalid client random size");
-        }
-        this.gmtUnixTime = gmtUnixTime;
-        this.clientRandom = clientRandom;
-    }
-
-    public void setGmtUnixTime(int gmtUnixTime) {
-        this.gmtUnixTime = gmtUnixTime;
     }
 
     public void setClientRandom(byte[] clientRandom) {
+        if (clientRandom.length != CLIENT_RANDOM_LENGTH) {
+            throw new InvalidParameterException("Invalid client random size");
+        }
         this.clientRandom = clientRandom;
     }
 
@@ -157,7 +134,7 @@ public class ClientHello extends Handshake {
         this.sessionId = sessionId;
     }
 
-    public void setCipherSuites(List<byte[]> cipherSuites) {
+    public void setCipherSuites(List<Short> cipherSuites) {
         this.cipherSuites = cipherSuites;
     }
 

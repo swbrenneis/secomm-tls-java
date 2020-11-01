@@ -35,8 +35,8 @@ public abstract class TlsRecord {
         return version;
     }
 
-    public TlsFragment getFragment() {
-        return fragment;
+    public <T extends TlsFragment> T getFragment() {
+        return (T) fragment;
     }
 
     public void setFragment(TlsFragment fragment) {
