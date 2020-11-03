@@ -11,6 +11,13 @@ import java.util.List;
 
 public class ServerNameIndicationExtension extends AbstractExtension {
 
+    public static class Builder implements ExtensionFactory.ExtensionBuilder {
+        @Override
+        public Extension build() {
+            return new ServerNameIndicationExtension();
+        }
+    }
+
     private List<String> hostNames;
 
     public ServerNameIndicationExtension(List<String> hostNames) {

@@ -1,5 +1,6 @@
 package org.secomm.tls.protocol.record;
 
+import org.secomm.tls.protocol.record.extensions.Extension;
 import org.secomm.tls.protocol.record.extensions.ServerNameIndicationExtension;
 import org.secomm.tls.util.NumberReaderWriter;
 
@@ -32,7 +33,7 @@ public class ClientHello extends AbstractHandshake {
 
     private short extensionsLength;
 
-    private List<ServerNameIndicationExtension> extensions;
+    private List<Extension> extensions;
 
     public ClientHello() {
         super(HandshakeTypes.CLIENT_HELLO);
@@ -111,7 +112,7 @@ public class ClientHello extends AbstractHandshake {
             out.write(compressionMethods);
         }
         NumberReaderWriter.writeShort(extensionsLength, out);
-        for (ServerNameIndicationExtension extension : extensions) {
+        for (Extension extension : extensions) {
             extension.encode(out);
         }
     }
@@ -146,14 +147,6 @@ public class ClientHello extends AbstractHandshake {
 
     public void setCipherSuites(List<Short> cipherSuites) {
         this.cipherSuites = cipherSuites;
-    }
-
-    public void setCompressionMethodLength(byte compressionMethodLength) {
-        this.compressionMethodLength = compressionMethodLength;
-    }
-
-    public void setExtensions(List<ServerNameIndicationExtension> extensions) {
-        this.extensions = extensions;
     }
 
 }

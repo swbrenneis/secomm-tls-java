@@ -2,12 +2,8 @@ package org.secomm.tls.protocol.record;
 
 import org.secomm.tls.util.NumberReaderWriter;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Reader;
-import java.nio.ByteBuffer;
 
 public abstract class AbstractHandshake implements Handshake {
 
