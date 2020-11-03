@@ -1,7 +1,10 @@
 package org.secomm.tls.protocol.record;
 
-import org.secomm.tls.protocol.record.extensions.HelloExtension;
+import org.secomm.tls.protocol.record.extensions.ServerNameIndicationExtension;
+import org.secomm.tls.util.NumberReaderWriter;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
@@ -10,7 +13,7 @@ import java.util.List;
 public class ClientHello extends AbstractHandshake {
 
     public static final class Builder implements HandshakeContentFactory.HandshakeBuilder<ClientHello> {
-        public ClientHello build(byte[] encoding) { return new ClientHello(encoding); }
+        public ClientHello build() { return new ClientHello(); }
     }
 
     public static final int CLIENT_RANDOM_LENGTH = 32;
@@ -23,104 +26,111 @@ public class ClientHello extends AbstractHandshake {
 
     private List<Short> cipherSuites;
 
-    private byte compressionMethod;
+    private byte compressionMethodLength;
 
-    private byte extensionsPresent;
+    private byte[] compressionMethods;
 
     private short extensionsLength;
 
-    private List<HelloExtension> extensions;
+    private List<ServerNameIndicationExtension> extensions;
 
     public ClientHello() {
-        super(CLIENT_HELLO, 0);
+        super(HandshakeTypes.CLIENT_HELLO);
 
         // This may or may not get set later.
         sessionId = new byte[0];
         cipherSuites = new ArrayList<>();
         extensions = new ArrayList<>();
-    }
-
-    public ClientHello(byte[] encoding) {
-        super(CLIENT_HELLO, encoding);
+        version = RecordLayer.TLS_1_2;
+        compressionMethods = new byte[1];
     }
 
     @Override
-    protected void decode(byte[] encoding) {
-
-        ByteBuffer encoded = ByteBuffer.wrap(encoding);
+    public void decode(ByteBuffer buffer) throws IOException {
 
         // Version
-        byte majorVersion = encoded.get();
-        byte minorVersion = encoded.get();
-        version = new RecordLayer.ProtocolVersion(majorVersion, minorVersion);
+        version = new RecordLayer.ProtocolVersion(buffer.get(), buffer.get());
 
         // Client random
-//        gmtUnixTime = encoded.getInt();
         clientRandom = new byte[CLIENT_RANDOM_LENGTH];
-        encoded.get(clientRandom);
+        buffer.get(clientRandom);
 
         // Session ID
-        byte sessionIdLength = encoded.get();
+        byte sessionIdLength = buffer.get();
         if (sessionIdLength > 0) {
             sessionId = new byte[sessionIdLength];
-            encoded.get(sessionId);
+            buffer.get(sessionId);
         }
 
         // Cipher suites
-        short cipherSuitesLength = encoded.getShort();
+        short cipherSuitesLength = NumberReaderWriter.readShort(buffer);
         cipherSuites = new ArrayList<>();
         while (cipherSuites.size() < cipherSuitesLength / 2) {
-            short cipherSuite = encoded.getShort();
-            cipherSuites.add(cipherSuite);
+            cipherSuites.add(NumberReaderWriter.readShort(buffer));
         }
 
         // Compression method
-        compressionMethod = encoded.get();
+        compressionMethodLength = buffer.get();
+        if (compressionMethodLength > 0) {
+            compressionMethods = new byte[compressionMethodLength];
+            buffer.get(compressionMethods);
+        }
 
         // Extensions
         extensions = new ArrayList<>();
-        extensionsPresent = encoded.get();
-        if (extensionsPresent > 0) {
-            short extensionsLength = encoded.getShort();
+        extensionsLength = NumberReaderWriter.readShort(buffer);
+        if (extensionsLength > 0) {
             int byteCount = 0;
             while (byteCount < extensionsLength) {
-                byte extensionType = encoded.get();
-                short extensionDataLength = encoded.getShort();
+                short extensionType = NumberReaderWriter.readShort(buffer);
+                short extensionDataLength = NumberReaderWriter.readShort(buffer);
                 byte[] extensionData = new byte[extensionDataLength];
-                encoded.get(extensionData);
-                extensions.add(new HelloExtension(extensionType, extensionData));
-                byteCount += extensionDataLength + 3;
+                buffer.get(extensionData);
+//                extensions.add(new ServerNameIndicationExtension(extensionType));
+                byteCount += extensionDataLength + 4;
             }
         }
     }
 
     @Override
-    public byte[] getEncoded() {
-        calculateLengths();
-        ByteBuffer encoded = encodeHeader();
-        encoded.put(version.majorVersion);
-        encoded.put(version.minorVersion);
-        encoded.put(clientRandom);
-        encoded.putShort((short) sessionId.length);
-        encoded.put(sessionId);
-        encoded.putShort((short) (cipherSuites.size() * 2));
+    public void encode(OutputStream out) throws IOException {
+
+        out.write(version.majorVersion);
+        out.write(version.minorVersion);
+        out.write(clientRandom);
+        out.write((byte) sessionId.length);
+        if (sessionId.length > 0) {
+            out.write(sessionId);
+        }
+        NumberReaderWriter.writeShort((short) (cipherSuites.size() * 2), out);
         for (Short cipherSuite : cipherSuites) {
-            encoded.putShort(cipherSuite);
+            NumberReaderWriter.writeShort(cipherSuite, out);
         }
-        encoded.put(compressionMethod);
-        encoded.put(extensionsPresent);
-        encoded.putShort(extensionsLength);
-        for (HelloExtension extension : extensions) {
-            encoded.put(extension.getEncoded());
+        out.write(compressionMethods.length);
+        if (compressionMethods.length > 0) {
+            out.write(compressionMethods);
         }
-        return encoded.array();
+        NumberReaderWriter.writeShort(extensionsLength, out);
+        for (ServerNameIndicationExtension extension : extensions) {
+            extension.encode(out);
+        }
     }
 
-    private void calculateLengths() {
-        extensionsLength = 0;
-        for (HelloExtension extension : extensions) {
-            extensionsLength += extension.getExtensionData().length + 1;
+    @Override
+    protected void calculateHandshakeLength() {
+        length = 2 + 32 + 2;                        // version + clientRandom + sessionId length
+        length += sessionId.length;
+        length += 2 + (cipherSuites.size() * 2);    // Cipher suitelength + cipher suites
+        length += 1 + 1;                            // Compression method
+        if (extensions.size() > 0) {
+            extensionsLength = 0;
+/*
+            for (ServerNameIndicationExtension extension : extensions) {
+                extensionsLength += extension.getLength();
+            }
+*/
         }
+        length += 2 + extensionsLength;             // Extensions length + extension lengths
     }
 
     public void setClientRandom(byte[] clientRandom) {
@@ -138,11 +148,12 @@ public class ClientHello extends AbstractHandshake {
         this.cipherSuites = cipherSuites;
     }
 
-    public void setCompressionMethod(byte compressionMethod) {
-        this.compressionMethod = compressionMethod;
+    public void setCompressionMethodLength(byte compressionMethodLength) {
+        this.compressionMethodLength = compressionMethodLength;
     }
 
-    public void setExtensions(List<HelloExtension> extensions) {
+    public void setExtensions(List<ServerNameIndicationExtension> extensions) {
         this.extensions = extensions;
     }
+
 }

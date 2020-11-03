@@ -1,5 +1,11 @@
 package org.secomm.tls.protocol.record;
 
+import org.secomm.tls.util.NumberReaderWriter;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Reader;
 import java.nio.ByteBuffer;
 
 public class TlsPlaintextRecord extends TlsRecord {
@@ -8,34 +14,32 @@ public class TlsPlaintextRecord extends TlsRecord {
         super(contentType, version);
     }
 
-    public TlsPlaintextRecord(byte[] encoded) throws InvalidContentType, InvalidEncodingException, InvalidHandshakeType {
-
-        ByteBuffer encoding = ByteBuffer.wrap(encoded);
-        contentType = encoding.get();
-        byte majorVersion = encoding.get();
-        byte minorVersion = encoding.get();
-        version = new RecordLayer.ProtocolVersion(majorVersion, minorVersion);
-        short length = encoding.getShort();
-        byte[] fragmentEncoding = new byte[length];
-        encoding.get(fragmentEncoding);
-        fragment = ContentFactory.getContent(contentType, fragmentEncoding);
+    public TlsPlaintextRecord() {
     }
 
-    public byte[] getEncoded() {
+    public void decode(Reader in)
+            throws InvalidContentType, InvalidEncodingException, InvalidHandshakeType, IOException {
 
-        byte[] encoding = fragment.getEncoded();
-        ByteBuffer encoded = ByteBuffer.allocate(encoding.length + 5);
-        encoded.put(contentType);
-        encoded.put(version.majorVersion);
-        encoded.put(version.minorVersion);
-        encoded.putShort((short) encoding.length);
-        encoded.put(encoding);
-
-        return encoded.array();
+        byte[] headerBytes = new byte[5];
+        NumberReaderWriter.readBytes(headerBytes, in);
+        ByteBuffer headerBuffer = ByteBuffer.wrap(headerBytes);
+        contentType = headerBuffer.get();
+        version = new RecordLayer.ProtocolVersion(headerBuffer.get(), headerBuffer.get());
+        short length = headerBuffer.getShort();
+        fragment = ContentFactory.getContent(contentType);
+        byte[] fragmentBytes = new byte[length];
+        NumberReaderWriter.readBytes(fragmentBytes, in);
+        ByteBuffer fragmentBuffer = ByteBuffer.wrap(fragmentBytes);
+        fragment.decode(fragmentBuffer);
     }
 
-    public void setContent(byte[] content) throws InvalidContentType, InvalidEncodingException, InvalidHandshakeType {
-        fragment = ContentFactory.getContent(contentType, content);
+    public void encode(OutputStream out) throws IOException {
+
+        out.write(contentType);
+        out.write(version.majorVersion);
+        out.write(version.minorVersion);
+        NumberReaderWriter.writeShort(fragment.getLength(), out);
+        fragment.encode(out);
     }
 
 }

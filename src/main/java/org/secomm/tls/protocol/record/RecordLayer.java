@@ -4,9 +4,11 @@ import org.secomm.tls.crypto.Algorithms;
 import org.secomm.tls.protocol.CipherSuites;
 import org.secomm.tls.protocol.SecurityParameters;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.security.SecureRandom;
 
 /**
@@ -25,7 +27,8 @@ public class RecordLayer {
         }
     }
 
-    public static final ProtocolVersion TLS_1_2 = new ProtocolVersion((byte) 0x03, (byte)0x03);
+    public static final ProtocolVersion TLS_1_0 = new ProtocolVersion((byte) 0x03, (byte) 0x01);
+    public static final ProtocolVersion TLS_1_2 = new ProtocolVersion((byte) 0x03, (byte) 0x03);
 
     private final ProtocolVersion version;
 
@@ -40,22 +43,38 @@ public class RecordLayer {
         this.secureRandom = secureRandom;
     }
 
-    public void sendClientHello(OutputStream out) throws IOException {
+    public void sendClientHello(byte[] sessionId, OutputStream out) throws IOException {
 
-        TlsPlaintextRecord record = new TlsPlaintextRecord(TlsRecord.HANDSHAKE, new ProtocolVersion((byte) 0x03, (byte) 0x03));
-        ClientHello clientHello = new ClientHello();
-        byte[] randomBytes = new byte[ClientHello.CLIENT_RANDOM_LENGTH];
-        secureRandom.nextBytes(randomBytes);
-        clientHello.setClientRandom(randomBytes);
-        clientHello.setCipherSuites(CipherSuites.defaultCipherSuites);
+        TlsPlaintextRecord record = new TlsPlaintextRecord(TlsRecord.HANDSHAKE, version);
 
-        HandshakeFragmentImpl handshakeFragment = new HandshakeFragmentImpl(AbstractHandshake.CLIENT_HELLO, clientHello);
+        try {
+            ClientHello clientHello = HandshakeContentFactory.getHandshake(HandshakeTypes.CLIENT_HELLO);
+            byte[] randomBytes = new byte[ClientHello.CLIENT_RANDOM_LENGTH];
+            secureRandom.nextBytes(randomBytes);
+            clientHello.setClientRandom(randomBytes);
+            clientHello.setSessionId(sessionId);
+            clientHello.setCipherSuites(CipherSuites.defaultCipherSuites);
 
-        out.write(record.getEncoded());
+            HandshakeFragment handshakeFragment = new HandshakeFragment(HandshakeTypes.CLIENT_HELLO, clientHello);
+            record.setFragment(handshakeFragment);
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            record.encode(outputStream);
+            out.write(outputStream.toByteArray());
+        } catch (InvalidHandshakeType e) {
+            e.printStackTrace();
+        }
     }
 
-    public TlsPlaintextRecord readRecord(InputStream in) {
-        return null;
+    public TlsPlaintextRecord readPlaintextRecord(Reader in)
+            throws InvalidEncodingException, InvalidContentType, InvalidHandshakeType, IOException {
+
+        TlsPlaintextRecord record = new TlsPlaintextRecord();
+        if (!in.ready()) {
+            throw new IOException("Stream not ready");
+        }
+        record.decode(in);
+        return record;
     }
 
     private void initializeSecurityParameters() {

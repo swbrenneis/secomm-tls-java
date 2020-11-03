@@ -1,20 +1,15 @@
 package org.secomm.tls.protocol.record;
 
+import org.secomm.tls.util.NumberReaderWriter;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
 import java.nio.ByteBuffer;
 
 public abstract class AbstractHandshake implements Handshake {
-
-    // Handshake types
-    public static final byte HELLO_REQUEST = 0;
-    public static final byte CLIENT_HELLO = 1;
-    public static final byte SERVER_HELLO = 2;
-    public static final byte CERTIFICATE = 11;
-    public static final byte SERVER_KEY_EXCHANGE  = 12;
-    public static final byte CERTIFICATE_REQUEST = 13;
-    public static final byte SERVER_HELLO_DONE = 14;
-    public static final byte CERTIFICATE_VERIFY = 15;
-    public static final byte CLIENT_KEY_EXCHANGE = 16;
-    public static final byte FINISHED = 20;
 
     protected byte handshakeType;
 
@@ -24,33 +19,33 @@ public abstract class AbstractHandshake implements Handshake {
      */
     protected int length;
 
+/*
     protected AbstractHandshake(byte handshakeType, int length) {
         this.handshakeType = handshakeType;
         this.length = length;
     }
+*/
 
-    protected AbstractHandshake(byte handshakeType, byte[] encoding) {
+    protected AbstractHandshake(byte handshakeType) {
         this.handshakeType = handshakeType;
-        decode(encoding);
     }
 
-    protected abstract void decode(byte[] encoding);
+    protected abstract void calculateHandshakeLength();
 
-    public abstract byte[] getEncoded();
+    protected void encodeHeader(OutputStream out) throws IOException {
 
-    protected ByteBuffer encodeHeader() {
-
-        ByteBuffer encoded = ByteBuffer.allocate(length + 4);
-        encoded.put(handshakeType);
-        int temp = length;
-        byte[] length24 = new byte[3];
-        length24[2] = (byte) (temp & 0xff);
-        temp = temp >> 8;
-        length24[1] = (byte) (temp & 0xff);
-        temp = temp >> 8;
-        length24[0] = (byte) (temp & 0xff);
-        encoded.put(length24);
-        return encoded;
+        out.write(handshakeType);
+        if (length == 0) {
+            calculateHandshakeLength();
+        }
+        NumberReaderWriter.write24Bit(length, out);
     }
 
+    @Override
+    public short getLength() {
+        if (length == 0) {
+            calculateHandshakeLength();
+        }
+        return (short) length;
+    }
 }

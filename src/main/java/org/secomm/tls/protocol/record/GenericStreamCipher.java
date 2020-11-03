@@ -1,28 +1,54 @@
 package org.secomm.tls.protocol.record;
 
+import org.secomm.tls.util.NumberReaderWriter;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.net.PortUnreachableException;
 import java.nio.ByteBuffer;
 
 public class GenericStreamCipher implements TlsFragment {
 
-    private final byte[] content;
+    public static final class Builder implements ContentFactory.FragmentBuilder<GenericStreamCipher> {
+        @Override
+        public GenericStreamCipher build() throws InvalidEncodingException, InvalidHandshakeType {
+            return new GenericStreamCipher();
+        }
+    }
 
-    private final byte[] mac;
+    private byte[] content;
 
-    public GenericStreamCipher(byte[] encoded, int contentLength, int macLength) {
+    private byte[] mac;
 
-        ByteBuffer encoding = ByteBuffer.wrap(encoded);
-        content = new byte[contentLength];
-        mac = new byte[macLength];
-        encoding.get(content);
-        encoding.get(mac);
+    public GenericStreamCipher() {
+
     }
 
     @Override
-    public byte[] getEncoded() {
+    public void decode(ByteBuffer buffer) throws IOException {
 
-        ByteBuffer encoded = ByteBuffer.allocate(content.length + mac.length);
-        encoded.put(content);
-        encoded.put(mac);
-        return encoded.array();
+        short contentLength = NumberReaderWriter.readShort(buffer);
+        content = new byte[contentLength];
+        buffer.get(content);
+        short macLength = NumberReaderWriter.readShort(buffer);
+        mac = new byte[macLength];
+        buffer.get(mac);
     }
+
+    @Override
+    public void encode(OutputStream out) throws IOException {
+
+        NumberReaderWriter.writeShort((short) content.length, out);
+        out.write(content);
+        NumberReaderWriter.writeShort((short) mac.length, out);
+        out.write(mac);
+    }
+
+    @Override
+    public short getLength() {
+        return (short) (2 + content.length + 2 + mac.length);
+    }
+
 }

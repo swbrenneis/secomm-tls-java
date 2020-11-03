@@ -1,12 +1,15 @@
 package org.secomm.tls.protocol.record;
 
-import javax.sound.midi.Track;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.nio.ByteBuffer;
 
 public class AlertFragment implements TlsFragment {
 
     public static final class Builder implements ContentFactory.FragmentBuilder<AlertFragment> {
-        public AlertFragment build(byte[] encoded) throws InvalidEncodingException {
-            return new AlertFragment(encoded);
+        public AlertFragment build() throws InvalidEncodingException {
+            return new AlertFragment();
         }
     }
 
@@ -41,24 +44,28 @@ public class AlertFragment implements TlsFragment {
     public static final byte NO_RENEGOTIATION = 100;
     public static final byte UNSUPPORTED_EXTENSION = 110;
 
-    private final byte alertLevel;
+    private byte alertLevel;
 
-    private final byte alertDescription;
+    private byte alertDescription;
 
-    public AlertFragment(byte[] encoded) throws InvalidEncodingException {
-        if (encoded.length != 2) {
-            throw new InvalidEncodingException("Invalid alert encoding");
-        }
-        alertLevel = encoded[0];
-        alertDescription = encoded[1];
+    public AlertFragment() {
+
+    }
+
+    public void decode(ByteBuffer buffer) throws IOException {
+        alertLevel = buffer.get();
+        alertDescription = buffer.get();
     }
     
     @Override
-    public byte[] getEncoded() {
+    public void encode(OutputStream out) throws IOException {
 
-        byte[] encoded = new byte[2];
-        encoded[0] = alertLevel;
-        encoded[1] = alertDescription;
-        return encoded;
+        out.write(alertLevel);
+        out.write(alertDescription);
+    }
+
+    @Override
+    public short getLength() {
+        return 2;
     }
 }
