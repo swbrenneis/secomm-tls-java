@@ -1,0 +1,22 @@
+@startuml
+create TlsPlaintextRecord
+RecordLayer->TlsPlaintextRecord: new
+activate RecordLayer
+create ClientHello
+RecordLayer->ClientHello: new
+RecordLayer->ClientHello: setClientRandom
+RecordLayer->ClientHello: setCipherSuites
+create HandshakeFragment
+RecordLayer->HandshakeFragment: new
+RecordLayer->HandshakeFragment: setHandshake
+RecordLayer->TlsPlaintextRecord: setFragment
+RecordLayer->TlsPlaintextRecord: encode
+deactivate RecordLayer
+TlsPlaintextRecord->HandshakeFragment: encode
+activate HandshakeFragment
+HandshakeFragment->ClientHello: getLength
+activate ClientHello
+HandshakeFragment->ClientHello: encode
+deactivate HandshakeFragment
+deactivate ClientHello
+@enduml
