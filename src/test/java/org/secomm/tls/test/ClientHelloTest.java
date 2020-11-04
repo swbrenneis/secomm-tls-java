@@ -1,3 +1,25 @@
+/*
+ * Copyright (c) 2020 Steve Brenneis.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following
+ * conditions: The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND
+ * EXPRESSOR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMEN.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ *
+ */
+
 package org.secomm.tls.test;
 
 import org.junit.Assert;
@@ -9,6 +31,8 @@ import org.secomm.tls.protocol.record.InvalidEncodingException;
 import org.secomm.tls.protocol.record.RecordLayer;
 import org.secomm.tls.protocol.record.TlsFragment;
 import org.secomm.tls.protocol.record.TlsPlaintextRecord;
+import org.secomm.tls.protocol.record.extensions.Extension;
+import org.secomm.tls.protocol.record.extensions.ExtensionFactory;
 import org.secomm.tls.util.NumberReaderWriter;
 
 import javax.imageio.plugins.tiff.BaselineTIFFTagSet;
@@ -117,15 +141,6 @@ public class ClientHelloTest {
         Assert.assertEquals(0x01, b);
         System.out.println("Handshake type:\t\t\t\tClientHello (0x01)");
         int length24 = NumberReaderWriter.read24Bit(encoded);
-/*
-        bytes = new byte[3];
-        encoded.get(bytes);
-        int length24 = bytes[0] & 0xff;
-        length24 = length24 << 8;
-        length24 |= (bytes[1] & 0xff);
-        length24 = length24 << 8;
-        length24 |= (bytes[2] & 0xff);
-*/
         Assert.assertTrue(length24 < 16777216);
         System.out.println("ClientHello length:\t\t\t" + length24 + " (" + hexEncode24(length24, true) + ")");
         short version = encoded.getShort();
@@ -161,9 +176,15 @@ public class ClientHelloTest {
         length = encoded.getShort();
         System.out.println("Extensions length:\t\t\t" + length + " (" + hexEncode(length, true) + ")");
         if (length > 0) {
-            bytes = new byte[length];
-            encoded.get(bytes);
-            System.out.println("Extension data:\t\t\t\t" + hexEncode(bytes, false));
+            byte[] extensionBytes = new byte[length];
+            encoded.get(extensionBytes);
+            ByteBuffer extensionBuffer = ByteBuffer.wrap(extensionBytes);
+            while (extensionBuffer.hasRemaining()) {
+                short extensionType = extensionBuffer.getShort();
+                Extension extension = ExtensionFactory.getExtension(extensionType);
+                extension.decode(extensionBuffer);
+                System.out.println(extension.getText());
+            }
         }
         System.out.println();
         System.out.println();
