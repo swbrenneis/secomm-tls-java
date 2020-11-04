@@ -1,7 +1,30 @@
+/*
+ * Copyright (c) 2020 Steve Brenneis.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+ * software and associated documentation files (the "Software"), to deal in the Software
+ * without restriction, including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software, and to permit
+ * persons to whom the Software is furnished to do so, subject to the following
+ * conditions: The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND
+ * EXPRESSOR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMEN.
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ *
+ */
+
 package org.secomm.tls.protocol.record;
 
 import org.secomm.tls.protocol.record.extensions.Extension;
-import org.secomm.tls.protocol.record.extensions.ServerNameIndicationExtension;
+import org.secomm.tls.protocol.record.extensions.ExtensionFactory;
+import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
 import org.secomm.tls.util.NumberReaderWriter;
 
 import java.io.IOException;
@@ -47,7 +70,7 @@ public class ClientHello extends AbstractHandshake {
     }
 
     @Override
-    public void decode(ByteBuffer buffer) throws IOException {
+    public void decode(ByteBuffer buffer) throws IOException, InvalidExtensionTypeException {
 
         // Version
         version = new RecordLayer.ProtocolVersion(buffer.get(), buffer.get());
@@ -84,11 +107,9 @@ public class ClientHello extends AbstractHandshake {
             int byteCount = 0;
             while (byteCount < extensionsLength) {
                 short extensionType = NumberReaderWriter.readShort(buffer);
-                short extensionDataLength = NumberReaderWriter.readShort(buffer);
-                byte[] extensionData = new byte[extensionDataLength];
-                buffer.get(extensionData);
-//                extensions.add(new ServerNameIndicationExtension(extensionType));
-                byteCount += extensionDataLength + 4;
+                Extension extension = ExtensionFactory.getExtension(extensionType);
+                byteCount += extension.decode(buffer);
+                extensions.add(ExtensionFactory.getExtension(extensionType));
             }
         }
     }
@@ -111,7 +132,11 @@ public class ClientHello extends AbstractHandshake {
         if (compressionMethods.length > 0) {
             out.write(compressionMethods);
         }
-        NumberReaderWriter.writeShort(extensionsLength, out);
+
+        if (extensions == null) {
+            extensions = ExtensionFactory.getCurrentExtensions();
+        }
+        NumberReaderWriter.writeShort((short) extensions.size(), out);
         for (Extension extension : extensions) {
             extension.encode(out);
         }
@@ -125,11 +150,13 @@ public class ClientHello extends AbstractHandshake {
         length += 1 + 1;                            // Compression method
         if (extensions.size() > 0) {
             extensionsLength = 0;
-/*
-            for (ServerNameIndicationExtension extension : extensions) {
-                extensionsLength += extension.getLength();
+            for (Extension extension : extensions) {
+                try {
+                    extensionsLength += extension.getLength();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-*/
         }
         length += 2 + extensionsLength;             // Extensions length + extension lengths
     }
