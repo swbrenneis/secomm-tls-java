@@ -20,7 +20,47 @@
  *
  */
 
-package org.secomm.tls.context;
+package org.secomm.tls.api;
+
+import org.secomm.tls.protocol.record.RecordLayer;
+
+import java.io.IOException;
+import java.security.SecureRandom;
 
 public class TlsClientContext extends TlsContext {
+
+    private SecureRandom random;
+
+    private RecordLayer recordLayer;
+
+    TlsClientContext(SecureRandom random) {
+        this.random = random;
+        this.recordLayer = new RecordLayer(RecordLayer.TLS_1_2, random);
+    }
+
+    /**
+     * Simple connect on default SSL port 443
+     *
+     * @param address
+     * @return
+     * @throws IOException
+     */
+    public TlsConversation connect(String address) throws IOException {
+        return connect(address, 443);
+    }
+
+    /**
+     *
+     * @param address
+     * @param port
+     * @return
+     * @throws IOException
+     */
+    public TlsConversation connect(String address, int port) throws IOException {
+        TlsConversationImpl tlsClient = new TlsConversationImpl(recordLayer);
+        tlsClient.connect(address, port);
+        recordLayer.connect(address, port);
+        return tlsClient;
+    }
+
 }

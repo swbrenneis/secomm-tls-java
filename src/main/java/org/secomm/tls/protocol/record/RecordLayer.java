@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.net.Socket;
 import java.security.SecureRandom;
 
 /**
@@ -64,30 +65,37 @@ public class RecordLayer {
 
     private byte[] sessionId;
 
+    private Socket clientSocket;
+
     public RecordLayer(ProtocolVersion version, SecureRandom secureRandom) {
         this.version = version;
         this.secureRandom = secureRandom;
+    }
+
+    public void connect(String address, int port) throws IOException {
+
+        clientSocket = new Socket(address, port);
     }
 
     public byte[] getClientHello() throws IOException {
 
         TlsPlaintextRecord record = new TlsPlaintextRecord(TlsRecord.HANDSHAKE, version);
 
-            ClientHello clientHello = new ClientHello();
-            byte[] randomBytes = new byte[ClientHello.CLIENT_RANDOM_LENGTH];
-            secureRandom.nextBytes(randomBytes);
-            clientHello.setClientRandom(randomBytes);
-            if (sessionId != null) {
-                clientHello.setSessionId(sessionId);
-            }
-            clientHello.setCipherSuites(CipherSuites.defaultCipherSuites);
-            clientHello.setExtensions(ExtensionFactory.getCurrentExtensions());
+        ClientHello clientHello = new ClientHello();
+        byte[] randomBytes = new byte[ClientHello.CLIENT_RANDOM_LENGTH];
+        secureRandom.nextBytes(randomBytes);
+        clientHello.setClientRandom(randomBytes);
+        if (sessionId != null) {
+            clientHello.setSessionId(sessionId);
+        }
+        clientHello.setCipherSuites(CipherSuites.defaultCipherSuites);
+        clientHello.setExtensions(ExtensionFactory.getCurrentExtensions());
 
-            HandshakeFragment handshakeFragment = new HandshakeFragment(HandshakeTypes.CLIENT_HELLO, clientHello);
-            record.setFragment(handshakeFragment);
+        HandshakeFragment handshakeFragment = new HandshakeFragment(HandshakeTypes.CLIENT_HELLO, clientHello);
+        record.setFragment(handshakeFragment);
 
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            return record.encode();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        return record.encode();
     }
 
     public TlsPlaintextRecord readPlaintextRecord(InputStream in)

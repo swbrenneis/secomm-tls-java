@@ -20,17 +20,15 @@
  *
  */
 
-package org.secomm.tls.context;
+package org.secomm.tls.api;
 
 import java.security.SecureRandom;
 
-public class TlsContext {
+public class TlsServerContext extends TlsContext {
 
-    public static TlsClientContext initializeClient(SecureRandom random) {
-        return new TlsClientContext();
-    }
+    private SecureRandom random;
 
-    public static TlsServerContext initializeServer(SecureRandom random) {
-        return new TlsServerContext();
+    TlsServerContext(SecureRandom random) {
+        this.random = random;
     }
 }
