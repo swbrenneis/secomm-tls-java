@@ -23,18 +23,17 @@
 package org.secomm.tls.protocol.record.extensions;
 
 import org.secomm.tls.protocol.record.InvalidEncodingException;
+import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-public interface Extension {
+public interface TlsExtension {
 
-    public void encode(OutputStream out) throws IOException;
+    public byte[] encode();
 
-    public int decode(ByteBuffer buffer);
-
-    public short getLength() throws IOException;
+    public int decode(EncodingByteBuffer buffer);
 
     // Mostly used for debugging
     public String getText() throws InvalidEncodingException;

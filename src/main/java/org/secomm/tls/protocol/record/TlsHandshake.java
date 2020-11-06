@@ -23,17 +23,16 @@
 package org.secomm.tls.protocol.record;
 
 import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
+import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.ByteBuffer;
 
-public interface Handshake {
+public interface TlsHandshake {
 
-    public void encode(OutputStream out) throws IOException;
+    public byte[] encode();
 
-    public short getLength();
-
-    public void decode(ByteBuffer handshakeBuffer) throws IOException, InvalidExtensionTypeException;
+    public void decode(EncodingByteBuffer handshakeBuffer) throws IOException, InvalidExtensionTypeException;
 }
