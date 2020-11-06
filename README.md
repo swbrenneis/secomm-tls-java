@@ -1,5 +1,5 @@
 # secomm-tls-java
-A Simple TLS library
+**A Simple TLS library**
 
 I needed a TLS implementation for the Tor Java Relay project. I got tired of fighting with a certain well-known TLS library (If you're going to provide zero documentation, the least you could do would be to put a few comments in the code). Thus was born this project.
 
@@ -9,29 +9,50 @@ If you do decide to use this and you would like to see a feature added, just lea
 
 Using the library is very simple. These are the steps to start a basic client
 
+`TLsClientContext clientContext = TlsContext.initializeClient(SecureRandonrandom);`
 
-TlsClientContext tlsClientContext = TlsContext.initializeClient();
+`TlsPeer peer = clientContext.connect("somewhere.com);`
 
-TlsClient tlsClient = tlsClientContext.connect("somewhere.com");
+`peer.send("Hi There!");`
 
-tlsClient.write("Hi There!");
+`String response = peer.readAll();`
 
-String response = tlsClient.readAll()
+The Java IO Stream API can be used as well.
+
+`TlsOutputStream outputStream = client.getOutputStream();`
+
+`TlsInputStream inputStream = client.getInputStream();`
 
 If you need to connect to a port other than the default (443), this is available
 
-TlsClient tlsClient = tlsClientContext.connect("somewhere.com", 1024);
+`TlsPeer peer = tlsClientContext.connect("somewhere.com", 1024);`
 
 A basic server looks like this
 
-TlsServerContext tlsServerContext = TlsContext.initializeServer();
+`TlsServerContext serverContext = TlsContext.initializeServer(SecureRandom random);`
 
-TlsServer tlsServer = tlsServerContext.listen(port);
+`TlsServer server = serverContext.listen()`;
 
-TlsPeer tlsPeer = tlsServer.get();
+`TlsPeer peer = server.accept();`
 
-String request = tlsPeer.readAll();
+`String request = peer.readAll();`
 
-tlsServer.write("I hear you!", tlsPeer);
+`peer.write("I hear you!");`
+
+As above, the stream API can be used
+
+`TlsOutputStream outputStream = peer.getOutputStream();`
+
+`TlsInputStream inputStream = peer.getInputStream();`
+
+The server can listen on ports other than the SSL default;
+
+`TlsServer server = serverContext.listen(1024);`
+
+There is also a conversation API
+
+`TlsConversation conversation = peer.getConversation()`
+
+`String response = conversation.exchange("Hi There!)`
 
 More to come when I can spend more time on it.
