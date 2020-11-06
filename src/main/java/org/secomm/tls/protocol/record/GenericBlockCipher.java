@@ -22,6 +22,7 @@
 
 package org.secomm.tls.protocol.record;
 
+import org.secomm.tls.util.EncodingByteBuffer;
 import org.secomm.tls.util.NumberReaderWriter;
 
 import java.io.IOException;
@@ -49,25 +50,22 @@ public class GenericBlockCipher implements TlsFragment {
     private byte paddingLength;
 
     @Override
-    public void encode(OutputStream out) throws IOException {
+    public byte[] encode() {
 
-        NumberReaderWriter.writeShort((short) iv.length, out);
-        out.write(iv);
-        NumberReaderWriter.writeShort((short) content.length, out);
-        out.write(content);
-        NumberReaderWriter.writeShort((short) mac.length, out);
-        out.write(mac);
-        out.write(padding);
-        out.write(paddingLength);
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        buffer.putShort((short) iv.length);
+        buffer.put(iv);
+        buffer.putShort((short) content.length);
+        buffer.put(content);
+        buffer.putShort((short) mac.length);
+        buffer.put(mac);
+        buffer.put(padding);
+        buffer.put(paddingLength);
+        return buffer.array();
     }
 
     @Override
-    public short getLength() {
-        return (short) (2 + iv.length + 2 + content.length + 2 + mac.length + padding.length + 1);
-    }
-
-    @Override
-    public void decode(ByteBuffer buffer) throws IOException, InvalidHandshakeType, InvalidEncodingException {
+    public void decode(EncodingByteBuffer buffer) throws IOException, InvalidHandshakeType, InvalidEncodingException {
 
         // Hmmm
     }

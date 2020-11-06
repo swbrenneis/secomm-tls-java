@@ -22,6 +22,8 @@
 
 package org.secomm.tls.protocol.record.extensions;
 
+import org.secomm.tls.util.ByteBufferUtil;
+import org.secomm.tls.util.EncodingByteBuffer;
 import org.secomm.tls.util.NumberReaderWriter;
 
 import java.io.ByteArrayOutputStream;
@@ -29,48 +31,42 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-public abstract class AbstractExtension implements Extension {
+public abstract class AbstractTlsExtension implements TlsExtension {
 
     protected final short extensionType;
 
     protected byte[] extensionData;
 
-    protected AbstractExtension(short extensionType) {
+    protected AbstractTlsExtension(short extensionType) {
         this.extensionType = extensionType;
     }
 
+    protected abstract void encodeExtensionData();
+
     @Override
-    public void encode(OutputStream out) throws IOException {
-        ByteArrayOutputStream encoded = new ByteArrayOutputStream();
+    public byte[] encode() {
+
+        EncodingByteBuffer buffer = EncodingByteBuffer.allocate(1024);
         if (extensionData == null) {
             encodeExtensionData();
         }
-        NumberReaderWriter.writeShort(extensionType, out);
-        NumberReaderWriter.writeShort((short) extensionData.length, out);
-        out.write(extensionData);
+        buffer.putShort(extensionType);
+        buffer.putShort((short) extensionData.length);
+        buffer.put(extensionData);
+        return buffer.toArray();
     }
-
-    protected abstract void encodeExtensionData() throws IOException;
 
     protected abstract void decodeExtensionData();
 
     @Override
-    public int decode(ByteBuffer buffer) {
+    public int decode(EncodingByteBuffer buffer) {
         short extensionDataLength = buffer.getShort();
-        // Some extensions with have a zero size
+        // Some extensions will have a zero size
         if (extensionDataLength > 0) {
             extensionData = new byte[extensionDataLength];
             buffer.get(extensionData);
             decodeExtensionData();
         }
         return extensionDataLength + 2;
-    }
-
-    @Override
-    public short getLength() throws IOException {
-        if (extensionData == null) {
-            encodeExtensionData();
-        }
-        return (short) extensionData.length;
     }
 }

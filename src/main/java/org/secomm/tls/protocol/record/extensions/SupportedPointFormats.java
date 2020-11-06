@@ -23,6 +23,7 @@
 package org.secomm.tls.protocol.record.extensions;
 
 import org.secomm.tls.protocol.record.InvalidEncodingException;
+import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -32,7 +33,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class SupportedPointFormats extends AbstractExtension {
+public class SupportedPointFormats extends AbstractTlsExtension {
 
     public static final class Builder implements ExtensionFactory.ExtensionBuilder<SupportedPointFormats> {
         @Override
@@ -59,7 +60,7 @@ public class SupportedPointFormats extends AbstractExtension {
     }
 
     @Override
-    protected void encodeExtensionData() throws IOException {
+    protected void encodeExtensionData() {
         ByteBuffer data = ByteBuffer.allocate(formats.size() + 2);
         data.put((byte) formats.size());
         for (byte format : formats) {
@@ -70,7 +71,7 @@ public class SupportedPointFormats extends AbstractExtension {
 
     @Override
     protected void decodeExtensionData() {
-        ByteBuffer data = ByteBuffer.wrap(extensionData);
+        EncodingByteBuffer data = EncodingByteBuffer.wrap(extensionData);
         byte formatSize = data.get();
         formats = new ArrayList<>();
         while (formats.size() < formatSize) {

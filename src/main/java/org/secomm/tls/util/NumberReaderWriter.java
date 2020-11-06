@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
 public class NumberReaderWriter {
 
@@ -36,12 +37,12 @@ public class NumberReaderWriter {
         out.write(shortBytes);
     }
 
-    public static void write24Bit(int i, OutputStream out) throws IOException {
+    public static byte[] write24Bit(int i) {
         byte[] int24 = new byte[3];
         int24[2] = (byte) (i & 0xff);
         int24[1] = (byte) ((i >> 8) & 0xff);
         int24[0] = (byte) ((i >> 16) & 0xff);
-        out.write(int24);
+        return int24;
     }
 
     /**
@@ -92,8 +93,9 @@ public class NumberReaderWriter {
     public static void readBytes(byte[] bytes, Reader in) throws IOException {
         char[] chars = new char[bytes.length];
         in.read(chars);
-        for (int i = 0; i < bytes.length; ++i) {
-            bytes[i] = (byte) chars[i];
+        int index = 0;
+        for (char c : chars) {
+            bytes[index++] = (byte) c;
         }
     }
 }

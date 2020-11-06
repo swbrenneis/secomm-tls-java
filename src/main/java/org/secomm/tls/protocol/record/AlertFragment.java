@@ -22,6 +22,8 @@
 
 package org.secomm.tls.protocol.record;
 
+import org.secomm.tls.util.EncodingByteBuffer;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Reader;
@@ -74,20 +76,15 @@ public class AlertFragment implements TlsFragment {
 
     }
 
-    public void decode(ByteBuffer buffer) throws IOException {
+    @Override
+    public void decode(EncodingByteBuffer buffer) throws IOException {
         alertLevel = buffer.get();
         alertDescription = buffer.get();
     }
     
     @Override
-    public void encode(OutputStream out) throws IOException {
-
-        out.write(alertLevel);
-        out.write(alertDescription);
+    public byte[] encode() {
+        return new byte[] { alertLevel, alertDescription };
     }
 
-    @Override
-    public short getLength() {
-        return 2;
-    }
 }

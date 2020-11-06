@@ -23,11 +23,14 @@
 package org.secomm.tls.protocol.record;
 
 import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
+import org.secomm.tls.util.ByteBufferUtil;
+import org.secomm.tls.util.EncodingByteBuffer;
 import org.secomm.tls.util.NumberReaderWriter;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 public class HandshakeFragment implements TlsFragment {
 
@@ -39,47 +42,47 @@ public class HandshakeFragment implements TlsFragment {
 
     private byte handshakeType;
 
-    private Handshake handshake;
+    /**
+     * Encoded as a 24 bit integer.
+     */
+    private int handshakeLength;
 
-    public HandshakeFragment(byte handshakeType, AbstractHandshake handshake) {
+    private TlsHandshake body;
+
+    public HandshakeFragment(byte handshakeType, TlsHandshake handshake) {
         this.handshakeType = handshakeType;
-        this.handshake = handshake;
+        this.body = handshake;
     }
 
     public HandshakeFragment() {
     }
 
     @Override
-    public void decode(ByteBuffer handshakeBuffer)
+    public void decode(EncodingByteBuffer handshakeBuffer)
             throws InvalidHandshakeType, IOException, InvalidExtensionTypeException {
         
         handshakeType = handshakeBuffer.get();
 //        int handshakeLength = NumberReaderWriter.read24Bit(handshakeBuffer);
-        handshake = HandshakeContentFactory.getHandshake(handshakeType);
-        int wrong = NumberReaderWriter.read24Bit(handshakeBuffer);
-        // Firefox sends the wrong handshake length. It should be the total
-        // record size - 4. Handshake type + 24 bit length. It sends total
-        // record size - 3.
-        int handshakeLength = handshakeBuffer.array().length - 4;
+        body = HandshakeContentFactory.getHandshake(handshakeType);
+        int handshakeLength = handshakeBuffer.get24Bit();
         byte[] bytes = new byte[handshakeLength];
         handshakeBuffer.get(bytes);
-        ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        handshake.decode(buffer);
+        EncodingByteBuffer buffer = EncodingByteBuffer.wrap(bytes);
+        body.decode(buffer);
     }
 
     @Override
-    public void encode(OutputStream out) throws IOException {
-        out.write(handshakeType);
-        NumberReaderWriter.write24Bit(handshake.getLength(), out);
-        handshake.encode(out);
+    public byte[] encode() {
+        byte[] handshakeBytes = body.encode();
+        EncodingByteBuffer buffer = EncodingByteBuffer.allocate(handshakeBytes.length + 4);
+        buffer.put(handshakeType);
+        handshakeLength = handshakeBytes.length;
+        buffer.put24Bit(handshakeLength);
+        buffer.put(handshakeBytes);
+        return buffer.toArray();
     }
 
-    @Override
-    public short getLength() {
-        return (short) (handshake.getLength() + 4);
-    }
-
-    public Handshake getHandshake() {
-        return handshake;
+    public TlsHandshake getHandshake() {
+        return body;
     }
 }

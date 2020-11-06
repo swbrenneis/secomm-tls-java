@@ -22,6 +22,8 @@
 
 package org.secomm.tls.protocol.record;
 
+import org.secomm.tls.util.EncodingByteBuffer;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Reader;
@@ -42,7 +44,7 @@ public class ChangeCipherSpecFragment implements TlsFragment {
     }
 
     @Override
-    public void decode(ByteBuffer buffer) throws InvalidEncodingException, IOException {
+    public void decode(EncodingByteBuffer buffer) throws InvalidEncodingException, IOException {
 
         type = buffer.get();
         if (type != 1) {
@@ -51,12 +53,8 @@ public class ChangeCipherSpecFragment implements TlsFragment {
     }
 
     @Override
-    public void encode(OutputStream out) throws IOException {
-        out.write(type);
+    public byte[] encode() {
+        return new byte[] { type };
     }
 
-    @Override
-    public short getLength() {
-        return 1;
-    }
 }

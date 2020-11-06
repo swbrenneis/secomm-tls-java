@@ -22,19 +22,18 @@
 
 package org.secomm.tls.protocol.record;
 
-import org.secomm.tls.protocol.record.extensions.Extension;
+import org.secomm.tls.protocol.record.extensions.KeyShare;
+import org.secomm.tls.protocol.record.extensions.TlsExtension;
 import org.secomm.tls.protocol.record.extensions.ExtensionFactory;
 import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
-import org.secomm.tls.util.NumberReaderWriter;
+import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
 import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClientHello extends AbstractHandshake {
+public class ClientHello implements TlsHandshake {
 
     public static final class Builder implements HandshakeContentFactory.HandshakeBuilder<ClientHello> {
         public ClientHello build() { return new ClientHello(); }
@@ -56,21 +55,16 @@ public class ClientHello extends AbstractHandshake {
 
     private short extensionsLength;
 
-    private List<Extension> extensions;
+    private List<TlsExtension> tlsExtensions;
 
     public ClientHello() {
-        super(HandshakeTypes.CLIENT_HELLO);
-
         // This may or may not get set later.
-        sessionId = new byte[0];
-        cipherSuites = new ArrayList<>();
-        extensions = new ArrayList<>();
         version = RecordLayer.TLS_1_2;
         compressionMethods = new byte[1];
     }
 
     @Override
-    public void decode(ByteBuffer buffer) throws IOException, InvalidExtensionTypeException {
+    public void decode(EncodingByteBuffer buffer) throws IOException, InvalidExtensionTypeException {
 
         // Version
         version = new RecordLayer.ProtocolVersion(buffer.get(), buffer.get());
@@ -87,10 +81,10 @@ public class ClientHello extends AbstractHandshake {
         }
 
         // Cipher suites
-        short cipherSuitesLength = NumberReaderWriter.readShort(buffer);
+        short cipherSuitesLength = buffer.getShort();
         cipherSuites = new ArrayList<>();
         while (cipherSuites.size() < cipherSuitesLength / 2) {
-            cipherSuites.add(NumberReaderWriter.readShort(buffer));
+            cipherSuites.add(buffer.getShort());
         }
 
         // Compression method
@@ -101,64 +95,62 @@ public class ClientHello extends AbstractHandshake {
         }
 
         // Extensions
-        extensions = new ArrayList<>();
-        extensionsLength = NumberReaderWriter.readShort(buffer);
+        tlsExtensions = new ArrayList<>();
+        extensionsLength = buffer.getShort();
         if (extensionsLength > 0) {
             int byteCount = 0;
             while (byteCount < extensionsLength) {
-                short extensionType = NumberReaderWriter.readShort(buffer);
-                Extension extension = ExtensionFactory.getExtension(extensionType);
-                byteCount += extension.decode(buffer);
-                extensions.add(ExtensionFactory.getExtension(extensionType));
-            }
-        }
-    }
-
-    @Override
-    public void encode(OutputStream out) throws IOException {
-
-        out.write(version.majorVersion);
-        out.write(version.minorVersion);
-        out.write(clientRandom);
-        out.write((byte) sessionId.length);
-        if (sessionId.length > 0) {
-            out.write(sessionId);
-        }
-        NumberReaderWriter.writeShort((short) (cipherSuites.size() * 2), out);
-        for (Short cipherSuite : cipherSuites) {
-            NumberReaderWriter.writeShort(cipherSuite, out);
-        }
-        out.write(compressionMethods.length);
-        if (compressionMethods.length > 0) {
-            out.write(compressionMethods);
-        }
-
-        if (extensions == null) {
-            extensions = ExtensionFactory.getCurrentExtensions();
-        }
-        NumberReaderWriter.writeShort((short) extensions.size(), out);
-        for (Extension extension : extensions) {
-            extension.encode(out);
-        }
-    }
-
-    @Override
-    protected void calculateHandshakeLength() {
-        length = 2 + 32 + 2;                        // version + clientRandom + sessionId length
-        length += sessionId.length;
-        length += 2 + (cipherSuites.size() * 2);    // Cipher suitelength + cipher suites
-        length += 1 + 1;                            // Compression method
-        if (extensions.size() > 0) {
-            extensionsLength = 0;
-            for (Extension extension : extensions) {
-                try {
-                    extensionsLength += extension.getLength();
-                } catch (IOException e) {
-                    e.printStackTrace();
+                short extensionType = buffer.getShort();
+                byteCount += 2;
+                TlsExtension tlsExtension = ExtensionFactory.getExtension(extensionType);
+                // There has to be a better way
+                if (tlsExtension instanceof KeyShare) {
+                    ((KeyShare) tlsExtension).setKeyShareType(KeyShare.KeyShareType.CLIENT_HELLO);
                 }
+                byteCount += tlsExtension.decode(buffer);
+                tlsExtensions.add(tlsExtension);
             }
         }
-        length += 2 + extensionsLength;             // Extensions length + extension lengths
+    }
+
+    @Override
+    public byte[] encode() {
+
+        EncodingByteBuffer buffer = EncodingByteBuffer.allocate(1024);
+        buffer.put(version.majorVersion);
+        buffer.put(version.minorVersion);
+        buffer.put(clientRandom);
+
+        if (sessionId != null) {
+            buffer.put((byte) sessionId.length);
+            if (sessionId.length > 0) {
+                buffer.put(sessionId);
+            }
+        } else {
+            buffer.put((byte) 0);
+        }
+
+        buffer.putShort((short) (cipherSuites.size() * 2));
+        for (Short cipherSuite : cipherSuites) {
+            buffer.putShort(cipherSuite);
+        }
+
+        buffer.put((byte) compressionMethods.length);
+        if (compressionMethods.length > 0) {
+            buffer.put(compressionMethods);
+        }
+
+        EncodingByteBuffer extensionsBuffer = EncodingByteBuffer.allocate(1024);
+        for (TlsExtension tlsExtension : tlsExtensions) {
+            byte [] extensionBytes = tlsExtension.encode();
+            extensionsLength += extensionBytes.length;
+            extensionsBuffer.putShort((short) extensionBytes.length);
+            extensionsBuffer.put(extensionBytes);
+        }
+        byte[] extensionBytes = extensionsBuffer.toArray();
+        buffer.putShort((short) extensionBytes.length);
+        buffer.put(extensionBytes);
+        return buffer.toArray();
     }
 
     public void setClientRandom(byte[] clientRandom) {
@@ -176,4 +168,7 @@ public class ClientHello extends AbstractHandshake {
         this.cipherSuites = cipherSuites;
     }
 
+    public void setExtensions(List<TlsExtension> tlsExtensions) {
+        this.tlsExtensions = tlsExtensions;
+    }
 }

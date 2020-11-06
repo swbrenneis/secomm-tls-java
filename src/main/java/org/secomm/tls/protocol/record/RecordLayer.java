@@ -25,10 +25,12 @@ package org.secomm.tls.protocol.record;
 import org.secomm.tls.crypto.Algorithms;
 import org.secomm.tls.protocol.CipherSuites;
 import org.secomm.tls.protocol.SecurityParameters;
+import org.secomm.tls.protocol.record.extensions.ExtensionFactory;
 import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.security.SecureRandom;
@@ -60,42 +62,39 @@ public class RecordLayer {
 
     private SecurityParameters currentCipherSpec;
 
+    private byte[] sessionId;
+
     public RecordLayer(ProtocolVersion version, SecureRandom secureRandom) {
         this.version = version;
         this.secureRandom = secureRandom;
     }
 
-    public void sendClientHello(byte[] sessionId, OutputStream out) throws IOException {
+    public byte[] getClientHello() throws IOException {
 
         TlsPlaintextRecord record = new TlsPlaintextRecord(TlsRecord.HANDSHAKE, version);
 
-        try {
-            ClientHello clientHello = HandshakeContentFactory.getHandshake(HandshakeTypes.CLIENT_HELLO);
+            ClientHello clientHello = new ClientHello();
             byte[] randomBytes = new byte[ClientHello.CLIENT_RANDOM_LENGTH];
             secureRandom.nextBytes(randomBytes);
             clientHello.setClientRandom(randomBytes);
-            clientHello.setSessionId(sessionId);
+            if (sessionId != null) {
+                clientHello.setSessionId(sessionId);
+            }
             clientHello.setCipherSuites(CipherSuites.defaultCipherSuites);
+            clientHello.setExtensions(ExtensionFactory.getCurrentExtensions());
 
             HandshakeFragment handshakeFragment = new HandshakeFragment(HandshakeTypes.CLIENT_HELLO, clientHello);
             record.setFragment(handshakeFragment);
 
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            record.encode(outputStream);
-            out.write(outputStream.toByteArray());
-        } catch (InvalidHandshakeType e) {
-            e.printStackTrace();
-        }
+            return record.encode();
     }
 
-    public TlsPlaintextRecord readPlaintextRecord(Reader in)
+    public TlsPlaintextRecord readPlaintextRecord(InputStream in)
             throws InvalidEncodingException, InvalidContentTypeException, InvalidHandshakeType, IOException,
             InvalidExtensionTypeException {
 
         TlsPlaintextRecord record = new TlsPlaintextRecord();
-        if (!in.ready()) {
-            throw new IOException("Stream not ready");
-        }
         record.decode(in);
         return record;
     }

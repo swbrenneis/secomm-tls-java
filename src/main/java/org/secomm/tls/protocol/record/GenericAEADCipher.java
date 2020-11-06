@@ -22,6 +22,7 @@
 
 package org.secomm.tls.protocol.record;
 
+import org.secomm.tls.util.EncodingByteBuffer;
 import org.secomm.tls.util.NumberReaderWriter;
 
 import java.io.IOException;
@@ -43,21 +44,18 @@ public class GenericAEADCipher implements TlsFragment {
     private byte[] content;
 
     @Override
-    public void encode(OutputStream out) throws IOException {
+    public byte[] encode() {
 
-        NumberReaderWriter.writeShort((short) nonceExplicit.length, out);
-        out.write(nonceExplicit);
-        NumberReaderWriter.writeShort((short) content.length, out);
-        out.write(content);
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        buffer.putShort((short) nonceExplicit.length);
+        buffer.put(nonceExplicit);
+        buffer.putShort((short) content.length);
+        buffer.put(content);
+        return buffer.array();
     }
 
     @Override
-    public short getLength() {
-        return (short) (2 + nonceExplicit.length + 2 + content.length);
-    }
-
-    @Override
-    public void decode(ByteBuffer buffer) throws IOException, InvalidHandshakeType, InvalidEncodingException {
+    public void decode(EncodingByteBuffer buffer) throws IOException, InvalidHandshakeType, InvalidEncodingException {
 
     }
 }

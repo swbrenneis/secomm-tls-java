@@ -22,10 +22,14 @@
 
 package org.secomm.tls.protocol.record;
 
+import org.apache.commons.io.IOUtils;
 import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
+import org.secomm.tls.util.EncodingByteBuffer;
 import org.secomm.tls.util.NumberReaderWriter;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.nio.ByteBuffer;
@@ -39,30 +43,30 @@ public class TlsPlaintextRecord extends TlsRecord {
     public TlsPlaintextRecord() {
     }
 
-    public void decode(Reader in)
+    public void decode(InputStream in)
             throws InvalidContentTypeException, InvalidEncodingException, InvalidHandshakeType, IOException,
             InvalidExtensionTypeException {
 
-        byte[] headerBytes = new byte[5];
-        NumberReaderWriter.readBytes(headerBytes, in);
-        ByteBuffer headerBuffer = ByteBuffer.wrap(headerBytes);
-        contentType = headerBuffer.get();
-        version = new RecordLayer.ProtocolVersion(headerBuffer.get(), headerBuffer.get());
-        short length = headerBuffer.getShort();
+        EncodingByteBuffer recordBuffer = EncodingByteBuffer.wrap(IOUtils.toByteArray(in));
+        contentType = recordBuffer.get();
+        version = new RecordLayer.ProtocolVersion(recordBuffer.get(), recordBuffer.get());
         fragment = ContentFactory.getContent(contentType);
+        short length = recordBuffer.getShort();
         byte[] fragmentBytes = new byte[length];
-        NumberReaderWriter.readBytes(fragmentBytes, in);
-        ByteBuffer fragmentBuffer = ByteBuffer.wrap(fragmentBytes);
+        recordBuffer.get(fragmentBytes);
+        EncodingByteBuffer fragmentBuffer = EncodingByteBuffer.wrap(fragmentBytes);
         fragment.decode(fragmentBuffer);
     }
 
-    public void encode(OutputStream out) throws IOException {
-
-        out.write(contentType);
-        out.write(version.majorVersion);
-        out.write(version.minorVersion);
-        NumberReaderWriter.writeShort(fragment.getLength(), out);
-        fragment.encode(out);
+    public byte[] encode() {
+        byte[] fragmentBytes = fragment.encode();
+        EncodingByteBuffer buffer = EncodingByteBuffer.allocate(fragmentBytes.length + 5);
+        buffer.put(contentType);
+        buffer.put(version.majorVersion);
+        buffer.put(version.minorVersion);
+        buffer.putShort((short) fragmentBytes.length);
+        buffer.put(fragmentBytes);
+        return buffer.toArray();
     }
 
 }

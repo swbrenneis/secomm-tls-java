@@ -22,13 +22,36 @@
 
 package org.secomm.tls.protocol.record.extensions;
 
+import org.secomm.tls.util.EncodingByteBuffer;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServerNameIndication extends AbstractExtension {
+/**
+ * Server name indication extension. See RFC 6006, section 3
+ *
+ * struct {
+ *     NameType name_type;
+ *     select (name_type) {
+ *         case host_name: HostName;
+ *     } name;
+ * } ServerName;
+ *
+ * enum {
+ *     host_name(0), (255)
+ * } NameType;
+ *
+ * opaque HostName<1..2^16-1>;
+ *
+ * struct {
+ *     ServerName server_name_list<1..2^16-1>
+ * } ServerNameList;
+ *
+ */
+public class ServerNameIndication extends AbstractTlsExtension {
 
     public static class Builder implements ExtensionFactory.ExtensionBuilder {
         @Override
@@ -37,44 +60,70 @@ public class ServerNameIndication extends AbstractExtension {
         }
     }
 
-    private byte hostNameType;
+    public static class ServerName {
+        public byte nameType;
+        public byte[] hostName;
+        public ServerName(byte nameType, byte[] hostName) {
+            this.nameType = nameType;
+            this.hostName = hostName;
+        }
+    }
 
-    private String hostName;
+    private final List<ServerName> serverNameList;
 
-    public ServerNameIndication(String hostName) {
+    public ServerNameIndication(List<String> serverNames) {
         super(Extensions.SERVER_NAME_INDICATION);
-        this.hostName = hostName;
-        hostNameType = 0;
+        this.serverNameList = new ArrayList<>();
+        for (String serverName : serverNames) {
+            this.serverNameList.add(new ServerName( (byte)0, serverName.getBytes(StandardCharsets.UTF_8)));
+        }
     }
 
     public ServerNameIndication() {
         super(Extensions.SERVER_NAME_INDICATION);
+        this.serverNameList = new ArrayList<>();
     }
 
     @Override
-    protected void encodeExtensionData() throws IOException {
+    protected void encodeExtensionData() {
 
-        ByteBuffer data = ByteBuffer.allocate(hostName.length() + 3);
-        data.put(hostNameType);
-        data.putShort((short) hostName.length());
-        data.put(hostName.getBytes(StandardCharsets.UTF_8));
+        EncodingByteBuffer data = EncodingByteBuffer.allocate(1024);
+        EncodingByteBuffer nameEncoding = EncodingByteBuffer.allocate(256);
+        for (ServerName serverName : serverNameList) {
+            nameEncoding.put(serverName.nameType);
+            nameEncoding.putShort((short) serverName.hostName.length);
+            nameEncoding.put(serverName.hostName);
+        }
+        byte[] encodedNames = nameEncoding.toArray();
+        data.putShort((short) encodedNames.length);
+        data.put(encodedNames);
+        extensionData = data.toArray();
     }
 
     @Override
     protected void decodeExtensionData() {
 
-        ByteBuffer data = ByteBuffer.wrap(extensionData);
-        hostNameType = data.get(); // Always 0, not used for anything.
-        short length = data.getShort();
-        byte[] nameBytes = new byte[length];
-        hostName = new String(nameBytes, StandardCharsets.UTF_8);
+        EncodingByteBuffer data = EncodingByteBuffer.wrap(extensionData);
+        short namesLength = data.getShort();
+        while (namesLength > 0) {
+            byte nameType = data.get();
+            namesLength--;
+            short nameLength = data.getShort();
+            namesLength -= nameLength + 2;
+            byte[] nameBytes = new byte[nameLength];
+            data.get(nameBytes);
+            serverNameList.add(new ServerName(nameType,nameBytes));
+        }
     }
 
     @Override
     public String getText() {
         String text = "Server Name Indication\n";
-        text += "\tHost name type " + hostNameType + "\n";
-        text += "\tHost name " + hostName + "\n";
+        for (ServerName serverName : serverNameList) {
+            String name = "\tName type: " + serverName.nameType + ", Host name: "
+                    + new String(serverName.hostName, StandardCharsets.UTF_8) + "\n";
+            text += name;
+        }
         return text;
     }
 }

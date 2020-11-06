@@ -25,29 +25,30 @@ package org.secomm.tls.test;
 import org.junit.Assert;
 import org.junit.Test;
 import org.secomm.tls.protocol.record.ClientHello;
-import org.secomm.tls.protocol.record.Handshake;
+import org.secomm.tls.protocol.record.TlsHandshake;
 import org.secomm.tls.protocol.record.HandshakeFragment;
 import org.secomm.tls.protocol.record.InvalidEncodingException;
 import org.secomm.tls.protocol.record.RecordLayer;
 import org.secomm.tls.protocol.record.TlsFragment;
 import org.secomm.tls.protocol.record.TlsPlaintextRecord;
-import org.secomm.tls.protocol.record.extensions.Extension;
+import org.secomm.tls.protocol.record.extensions.TlsExtension;
 import org.secomm.tls.protocol.record.extensions.ExtensionFactory;
+import org.secomm.tls.protocol.record.extensions.ServerNameIndication;
+import org.secomm.tls.util.EncodingByteBuffer;
 import org.secomm.tls.util.NumberReaderWriter;
 
-import javax.imageio.plugins.tiff.BaselineTIFFTagSet;
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.StringReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ClientHelloTest {
 
@@ -57,12 +58,12 @@ public class ClientHelloTest {
         ServerSocket serverSocket = new ServerSocket(8443);
         Socket clientSocket = serverSocket.accept();
         TlsPlaintextRecord record = new TlsPlaintextRecord();
-        record.decode(new BufferedReader(new InputStreamReader(clientSocket.getInputStream())));
+        record.decode(clientSocket.getInputStream());
         serverSocket.close();
 
         HandshakeFragment handshakeFragment = record.getFragment();
-        Handshake handshake = handshakeFragment.getHandshake();
-        Assert.assertTrue(handshake instanceof ClientHello);
+        TlsHandshake tlsHandshake = handshakeFragment.getHandshake();
+        Assert.assertTrue(tlsHandshake instanceof ClientHello);
     }
 
     @Test
@@ -96,11 +97,14 @@ public class ClientHelloTest {
 
         SecureRandom random = SecureRandom.getInstanceStrong();
         RecordLayer recordLayer = new RecordLayer(RecordLayer.TLS_1_0, random);
-        Socket socket = new Socket("www.example.com", 443);
-        byte[] sessionId = new byte[0];
-//        random.nextBytes(sessionId);
-        recordLayer.sendClientHello(sessionId, socket.getOutputStream());
-        TlsPlaintextRecord record = recordLayer.readPlaintextRecord(new BufferedReader(new InputStreamReader(socket.getInputStream())));
+        List<String> hostNames = new ArrayList<>();
+        hostNames.add("www.example.com");
+        ExtensionFactory.addExtension(new ServerNameIndication(hostNames));
+        byte[] encoded = recordLayer.getClientHello();
+//        Socket socket = new Socket("www.example.com", 443);
+//        socket.getOutputStream().write(encoded);
+        ByteArrayInputStream bytesIn = new ByteArrayInputStream(encoded);
+        TlsPlaintextRecord record = recordLayer.readPlaintextRecord(bytesIn);
         TlsFragment fragment = record.getFragment();
     }
 
@@ -178,12 +182,12 @@ public class ClientHelloTest {
         if (length > 0) {
             byte[] extensionBytes = new byte[length];
             encoded.get(extensionBytes);
-            ByteBuffer extensionBuffer = ByteBuffer.wrap(extensionBytes);
+            EncodingByteBuffer extensionBuffer = EncodingByteBuffer.wrap(extensionBytes);
             while (extensionBuffer.hasRemaining()) {
                 short extensionType = extensionBuffer.getShort();
-                Extension extension = ExtensionFactory.getExtension(extensionType);
-                extension.decode(extensionBuffer);
-                System.out.println(extension.getText());
+                TlsExtension tlsExtension = ExtensionFactory.getExtension(extensionType);
+                tlsExtension.decode(extensionBuffer);
+                System.out.println(tlsExtension.getText());
             }
         }
         System.out.println();

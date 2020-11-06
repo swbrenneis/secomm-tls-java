@@ -25,9 +25,15 @@ package org.secomm.tls.protocol.record.extensions;
 public class Extensions {
 
     public static final short SERVER_NAME_INDICATION = 0;
+    public static final short CERTIFICATE_STATUS_REQUEST = 5;
     public static final short SUPPORTED_ELLIPTIC_CURVES = 10;
     public static final short SUPPORTED_POINT_FORMATS = 11;
     public static final short SIGNATURE_ALGORITHMS = 13;
+    public static final short APPLICATION_LAYER_PROTOCOL_NEGOTIATION = 16;
+    public static final short EXTENDED_MASTER_SECRET = 23;
     public static final short SESSION_TICKET = 35;
+    public static final short SUPPORTED_VERSIONS = 43;
+    public static final short KEY_SHARE = 51;
+    public static final short RENEGOTIATION_INFO = (short) 0xff01;  // Looks like -255 decimal
 
 }

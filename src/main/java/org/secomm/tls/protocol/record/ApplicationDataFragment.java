@@ -22,10 +22,9 @@
 
 package org.secomm.tls.protocol.record;
 
+import org.secomm.tls.util.EncodingByteBuffer;
+
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.nio.ByteBuffer;
 
 public class ApplicationDataFragment implements TlsFragment {
 
@@ -40,17 +39,12 @@ public class ApplicationDataFragment implements TlsFragment {
     }
 
     @Override
-    public void encode(OutputStream out) throws IOException {
-
+    public byte[] encode() {
+        return new byte[0];
     }
 
     @Override
-    public short getLength() {
-        return 0;
-    }
-
-    @Override
-    public void decode(ByteBuffer buffer) throws IOException, InvalidHandshakeType, InvalidEncodingException {
+    public void decode(EncodingByteBuffer buffer) throws IOException, InvalidHandshakeType, InvalidEncodingException {
 
     }
 }

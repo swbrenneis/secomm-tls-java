@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 
 public class HandshakeContentFactory {
 
-    public interface HandshakeBuilder<T extends AbstractHandshake> {
+    public interface HandshakeBuilder<T extends TlsHandshake> {
         public T build();
     }
 
@@ -36,7 +36,7 @@ public class HandshakeContentFactory {
             { HandshakeTypes.CLIENT_HELLO, new ClientHello.Builder() }
     }).collect(Collectors.toMap(e -> (Byte) e[0], e -> (HandshakeBuilder<?>) e[1]));
 
-    public static <T extends AbstractHandshake> T getHandshake(byte handshakeType) throws InvalidHandshakeType {
+    public static <T extends TlsHandshake> T getHandshake(byte handshakeType) throws InvalidHandshakeType {
         if (!handshakeBuilderMap.containsKey(handshakeType)) {
             throw new InvalidHandshakeType("Unknown handshake type " + handshakeType);
         }

@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
-public class SessionTicket extends AbstractExtension {
+public class SessionTicket extends AbstractTlsExtension {
 
     public final static class Builder implements ExtensionFactory.ExtensionBuilder<SessionTicket> {
         @Override
@@ -50,7 +50,7 @@ public class SessionTicket extends AbstractExtension {
     }
 
     @Override
-    protected void encodeExtensionData() throws IOException {
+    protected void encodeExtensionData() {
 
         ByteBuffer data = ByteBuffer.allocate(ticket.length + 2);
         data.putShort((short) ticket.length);

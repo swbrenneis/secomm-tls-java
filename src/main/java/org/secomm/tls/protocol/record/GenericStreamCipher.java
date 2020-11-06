@@ -22,6 +22,7 @@
 
 package org.secomm.tls.protocol.record;
 
+import org.secomm.tls.util.EncodingByteBuffer;
 import org.secomm.tls.util.NumberReaderWriter;
 
 import java.io.IOException;
@@ -49,28 +50,25 @@ public class GenericStreamCipher implements TlsFragment {
     }
 
     @Override
-    public void decode(ByteBuffer buffer) throws IOException {
+    public void decode(EncodingByteBuffer buffer) throws IOException {
 
-        short contentLength = NumberReaderWriter.readShort(buffer);
+        short contentLength = buffer.getShort();
         content = new byte[contentLength];
         buffer.get(content);
-        short macLength = NumberReaderWriter.readShort(buffer);
+        short macLength = buffer.getShort();
         mac = new byte[macLength];
         buffer.get(mac);
     }
 
     @Override
-    public void encode(OutputStream out) throws IOException {
+    public byte[] encode() {
 
-        NumberReaderWriter.writeShort((short) content.length, out);
-        out.write(content);
-        NumberReaderWriter.writeShort((short) mac.length, out);
-        out.write(mac);
-    }
-
-    @Override
-    public short getLength() {
-        return (short) (2 + content.length + 2 + mac.length);
+        EncodingByteBuffer buffer = EncodingByteBuffer.allocate(1024);
+        buffer.putShort((short) content.length);
+        buffer.put(content);
+        buffer.putShort((short) mac.length);
+        buffer.put(mac);
+        return buffer.toArray();
     }
 
 }

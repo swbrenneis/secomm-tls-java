@@ -23,6 +23,7 @@
 package org.secomm.tls.protocol.record.extensions;
 
 import org.secomm.tls.protocol.record.InvalidEncodingException;
+import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -32,7 +33,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class SupportedEllipticCurves extends AbstractExtension {
+public class SupportedEllipticCurves extends AbstractTlsExtension {
 
     public static final class Builder implements ExtensionFactory.ExtensionBuilder<SupportedEllipticCurves> {
         @Override
@@ -67,7 +68,7 @@ public class SupportedEllipticCurves extends AbstractExtension {
     }
 
     @Override
-    protected void encodeExtensionData() throws IOException {
+    protected void encodeExtensionData() {
         ByteBuffer data = ByteBuffer.allocate(curves.size() + 2);
         data.putShort((short) curves.size());
         for (short curve : curves) {
@@ -78,7 +79,7 @@ public class SupportedEllipticCurves extends AbstractExtension {
 
     @Override
     protected void decodeExtensionData() {
-        ByteBuffer data = ByteBuffer.wrap(extensionData);
+        EncodingByteBuffer data = EncodingByteBuffer.wrap(extensionData);
         short curvesSize = data.getShort();
         curves = new ArrayList<>();
         while (curves.size() < curvesSize / 2) {

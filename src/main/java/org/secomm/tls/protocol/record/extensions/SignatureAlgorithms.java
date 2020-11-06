@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class SignatureAlgorithms extends AbstractExtension {
+public class SignatureAlgorithms extends AbstractTlsExtension {
 
     public static final class Builder implements ExtensionFactory.ExtensionBuilder<SignatureAlgorithms> {
         @Override
@@ -79,7 +79,7 @@ public class SignatureAlgorithms extends AbstractExtension {
     }
 
     @Override
-    protected void encodeExtensionData() throws IOException {
+    protected void encodeExtensionData() {
 
         ByteBuffer data = ByteBuffer.allocate((algorithmsList.size() * 2) + 2);
         data.putShort((short) (algorithmsList.size() * 2));
