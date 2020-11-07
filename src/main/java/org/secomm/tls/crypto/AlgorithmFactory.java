@@ -27,12 +27,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Algorithms {
+public class AlgorithmFactory {
 
     public interface PrfBuilder <T extends PRFAlgorithm> {
         public T build();
     }
-
+/*
     public enum PrfAlgorithms { TLS_PRF_SHA256 }
 
     public static Map<PrfAlgorithms, PrfBuilder<?>> prfAlgorithms = Stream.of( new Object[][] {
@@ -52,6 +52,7 @@ public class Algorithms {
     public enum CipherType { STREAM, BLOCK, AEAD }
 
     public enum MACAlgorithm{ NULL, HMAC_MD5, HMAC_SHA1, HMAC_SHA256, HMAC_SHA384, HMAC_SHA512 }
+*/
 
 
 }

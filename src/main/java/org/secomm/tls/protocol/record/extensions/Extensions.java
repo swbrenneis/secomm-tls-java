@@ -22,6 +22,10 @@
 
 package org.secomm.tls.protocol.record.extensions;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 public class Extensions {
 
     public static final short SERVER_NAME_INDICATION = 0;
@@ -36,4 +40,8 @@ public class Extensions {
     public static final short KEY_SHARE = 51;
     public static final short RENEGOTIATION_INFO = (short) 0xff01;  // Looks like -255 decimal
 
+    public static List<TlsExtension> defaultExtensions = Stream.of(
+            new ExtendedMasterSecret(),
+            new SupportedVersions()
+    ).collect(Collectors.toList());
 }

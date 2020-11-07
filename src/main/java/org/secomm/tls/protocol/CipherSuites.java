@@ -403,5 +403,4 @@ public class CipherSuites {
             TLS_RSA_WITH_AES_256_CBC_SHA,
             TLS_RSA_WITH_3DES_EDE_CBC_SHA
     ).collect(Collectors.toList());
-
 }
