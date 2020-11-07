@@ -22,41 +22,46 @@
 
 package org.secomm.tls.protocol;
 
-import org.secomm.tls.crypto.Algorithms;
-import org.secomm.tls.crypto.PRFAlgorithm;
-
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 public class SecurityParameters {
 
     public enum ConnectionEnd { CLIENT, SERVER }
 
+    public enum PRFAlgorithm { TLS_PRF_SHA256 }
+
+    public enum BulkCipherAlgorithm { NULL, RC4, TRIPLEDES, AES }
+
+    public enum CipherType { STREAM, BLOCK, AEAD }
+
+    public enum MACAlgorithm { NULL, HMAC_MD5, HMAC_SHA1, HMAC_SHA256, HMAC_SHA384, HMAC_SHA512 }
+
+    public enum CompressionMethod { NULL }
+
     private final ConnectionEnd entity;
 
     private PRFAlgorithm prfAlgorithm;
 
-    private Algorithms.BulkCipherAlgorithm bulkCipherAlgorithm;
+    private BulkCipherAlgorithm bulkCipherAlgorithm;
 
-    private Algorithms.CipherType cipherType;
+    private CipherType cipherType;
 
-    private int encryptionKeyLength;
+    private byte encryptionKeyLength;
 
-    private int blockLength;
+    private byte blockLength;
 
-    private int fixedIvLength;
+    private byte fixedIvLength;
 
-    private int recordIvLength;
+    private byte recordIvLength;
 
-    private Algorithms.MACAlgorithm macAlgorithm;
+    private MACAlgorithm macAlgorithm;
 
-    private int macLength;
+    private byte macLength;
 
-    private int macKeyLength;
+    private byte macKeyLength;
 
-    /**
-     * The RFC defines two values. 0 and 255.
-     */
-    private int compressionMethod;
+    private CompressionMethod compressionMethod;
 
     /**
      * Always 48 bytes
@@ -73,100 +78,23 @@ public class SecurityParameters {
      */
     private byte[] serverRandom;
 
-    public SecurityParameters(ConnectionEnd entity) {
+    /**
+     *
+     * @param entity
+     */
+    public SecurityParameters(ConnectionEnd entity, SecureRandom secureRandom) {
         this.entity = entity;
+        byte[] random = new byte[32];
+        secureRandom.nextBytes(random);
+        if (entity == ConnectionEnd.SERVER) {
+            serverRandom = random;
+        } else {
+            clientRandom = random;
+        }
     }
 
     public ConnectionEnd getEntity() {
         return entity;
-    }
-
-    public PRFAlgorithm getPrfAlgorithm() {
-        return prfAlgorithm;
-    }
-
-    public void setPrfAlgorithm(PRFAlgorithm prfAlgorithm) {
-        this.prfAlgorithm = prfAlgorithm;
-    }
-
-    public Algorithms.BulkCipherAlgorithm getBulkCipherAlgorithm() {
-        return bulkCipherAlgorithm;
-    }
-
-    public void setBulkCipherAlgorithm(Algorithms.BulkCipherAlgorithm bulkCipherAlgorithm) {
-        this.bulkCipherAlgorithm = bulkCipherAlgorithm;
-    }
-
-    public Algorithms.CipherType getCipherType() {
-        return cipherType;
-    }
-
-    public void setCipherType(Algorithms.CipherType cipherType) {
-        this.cipherType = cipherType;
-    }
-
-    public int getEncryptionKeyLength() {
-        return encryptionKeyLength;
-    }
-
-    public void setEncryptionKeyLength(int encryptionKeyLength) {
-        this.encryptionKeyLength = encryptionKeyLength;
-    }
-
-    public int getBlockLength() {
-        return blockLength;
-    }
-
-    public void setBlockLength(int blockLength) {
-        this.blockLength = blockLength;
-    }
-
-    public int getFixedIvLength() {
-        return fixedIvLength;
-    }
-
-    public void setFixedIvLength(int fixedIvLength) {
-        this.fixedIvLength = fixedIvLength;
-    }
-
-    public int getRecordIvLength() {
-        return recordIvLength;
-    }
-
-    public void setRecordIvLength(int recordIvLength) {
-        this.recordIvLength = recordIvLength;
-    }
-
-    public Algorithms.MACAlgorithm getMacAlgorithm() {
-        return macAlgorithm;
-    }
-
-    public void setMacAlgorithm(Algorithms.MACAlgorithm macAlgorithm) {
-        this.macAlgorithm = macAlgorithm;
-    }
-
-    public int getMacLength() {
-        return macLength;
-    }
-
-    public void setMacLength(int macLength) {
-        this.macLength = macLength;
-    }
-
-    public int getMacKeyLength() {
-        return macKeyLength;
-    }
-
-    public void setMacKeyLength(int macKeyLength) {
-        this.macKeyLength = macKeyLength;
-    }
-
-    public int getCompressionMethod() {
-        return compressionMethod;
-    }
-
-    public void setCompressionMethod(int compressionMethod) {
-        this.compressionMethod = compressionMethod;
     }
 
     public byte[] getMasterSecret() {
@@ -191,6 +119,94 @@ public class SecurityParameters {
 
     public void setServerRandom(byte[] serverRandom) {
         this.serverRandom = serverRandom;
+    }
+
+    public PRFAlgorithm getPrfAlgorithm() {
+        return prfAlgorithm;
+    }
+
+    public void setPrfAlgorithm(PRFAlgorithm prfAlgorithm) {
+        this.prfAlgorithm = prfAlgorithm;
+    }
+
+    public BulkCipherAlgorithm getBulkCipherAlgorithm() {
+        return bulkCipherAlgorithm;
+    }
+
+    public void setBulkCipherAlgorithm(BulkCipherAlgorithm bulkCipherAlgorithm) {
+        this.bulkCipherAlgorithm = bulkCipherAlgorithm;
+    }
+
+    public CipherType getCipherType() {
+        return cipherType;
+    }
+
+    public void setCipherType(CipherType cipherType) {
+        this.cipherType = cipherType;
+    }
+
+    public byte getEncryptionKeyLength() {
+        return encryptionKeyLength;
+    }
+
+    public void setEncryptionKeyLength(byte encryptionKeyLength) {
+        this.encryptionKeyLength = encryptionKeyLength;
+    }
+
+    public byte getBlockLength() {
+        return blockLength;
+    }
+
+    public void setBlockLength(byte blockLength) {
+        this.blockLength = blockLength;
+    }
+
+    public byte getFixedIvLength() {
+        return fixedIvLength;
+    }
+
+    public void setFixedIvLength(byte fixedIvLength) {
+        this.fixedIvLength = fixedIvLength;
+    }
+
+    public byte getRecordIvLength() {
+        return recordIvLength;
+    }
+
+    public void setRecordIvLength(byte recordIvLength) {
+        this.recordIvLength = recordIvLength;
+    }
+
+    public MACAlgorithm getMacAlgorithm() {
+        return macAlgorithm;
+    }
+
+    public void setMacAlgorithm(MACAlgorithm macAlgorithm) {
+        this.macAlgorithm = macAlgorithm;
+    }
+
+    public byte getMacLength() {
+        return macLength;
+    }
+
+    public void setMacLength(byte macLength) {
+        this.macLength = macLength;
+    }
+
+    public byte getMacKeyLength() {
+        return macKeyLength;
+    }
+
+    public void setMacKeyLength(byte macKeyLength) {
+        this.macKeyLength = macKeyLength;
+    }
+
+    public CompressionMethod getCompressionMethod() {
+        return compressionMethod;
+    }
+
+    public void setCompressionMethod(CompressionMethod compressionMethod) {
+        this.compressionMethod = compressionMethod;
     }
 
     @Override

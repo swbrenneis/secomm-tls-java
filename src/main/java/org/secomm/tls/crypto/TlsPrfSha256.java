@@ -22,13 +22,9 @@
 
 package org.secomm.tls.crypto;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.util.Arrays;
-
 public class TlsPrfSha256 implements PRFAlgorithm {
 
-    public static final class Builder implements Algorithms.PrfBuilder<TlsPrfSha256> {
+    public static final class Builder implements AlgorithmFactory.PrfBuilder<TlsPrfSha256> {
         @Override
         public TlsPrfSha256 build() {
             return new TlsPrfSha256();

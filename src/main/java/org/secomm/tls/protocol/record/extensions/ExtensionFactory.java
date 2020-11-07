@@ -48,25 +48,11 @@ public class ExtensionFactory {
             { Extensions.SUPPORTED_VERSIONS, new SupportedVersions.Builder() }
     }).collect(Collectors.toMap(e -> (Short) e[0], e -> (ExtensionBuilder<?>) e[1]));
 
-    private static List<TlsExtension> currentTlsExtensions = new ArrayList<>();
-
     public static <T extends TlsExtension> T getExtension(short extensionType) throws InvalidExtensionTypeException {
         if (!extensionsMap.containsKey(extensionType)) {
             throw new InvalidExtensionTypeException("Unknown extension " + extensionType);
         }
         ExtensionBuilder<?> builder = extensionsMap.get(extensionType);
         return (T) extensionsMap.get(extensionType).build();
-    }
-
-    public static List<TlsExtension> getCurrentExtensions() {
-        return currentTlsExtensions;
-    }
-
-    public static void setCurrentExtensions(final List<TlsExtension> currentTlsExtensions) {
-        ExtensionFactory.currentTlsExtensions = currentTlsExtensions;
-    }
-
-    public static void addExtension(TlsExtension tlsExtension) {
-        currentTlsExtensions.add(tlsExtension);
     }
 }

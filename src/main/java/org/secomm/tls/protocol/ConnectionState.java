@@ -26,6 +26,10 @@ import javax.crypto.SecretKey;
 
 public class ConnectionState {
 
+    public enum CurrentState { INITIALIZING, HANDSHAKE_STARTED, HANDSHAKE_COMPLETE, RENEGOTIATING, CLOSED }
+
+    private CurrentState currentState;
+
     /**
      * Per the RFC, this contains the current scheduled
      * key and stream cipher state data.
@@ -34,34 +38,20 @@ public class ConnectionState {
         public SecretKey scheduledKey;
     }
 
-    private SecurityParameters securityParameters;
-
-    /**
-     * This library isn't going to offer compression for TLS 1.2
-     * since it has been removed in TLS 1.3. this is here for
-     * documentation purposes only. It will always be false;
-     */
-    private boolean compressionState;
-
     private CipherState cipherState;
 
     private byte[] macKey;
+
+    private SecurityParameters securityParameters;
 
     /**
      * Current record sequence number.
      */
     private long sequenceNumber;
 
-    public SecurityParameters getSecurityParameters() {
-        return securityParameters;
-    }
-
-    public void setSecurityParameters(SecurityParameters securityParameters) {
+    public ConnectionState(SecurityParameters securityParameters) {
         this.securityParameters = securityParameters;
-    }
-
-    public boolean getCompressionState() {
-        return compressionState;
+        this.currentState = CurrentState.INITIALIZING;
     }
 
     public CipherState getCipherState() {
@@ -86,5 +76,17 @@ public class ConnectionState {
 
     public long incrementSequenceNumber() {
         return ++sequenceNumber;
+    }
+
+    public CurrentState getCurrentState() {
+        return currentState;
+    }
+
+    public void setCurrentState(CurrentState currentState) {
+        this.currentState = currentState;
+    }
+
+    public SecurityParameters getSecurityParameters() {
+        return securityParameters;
     }
 }

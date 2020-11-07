@@ -22,19 +22,23 @@
 
 package org.secomm.tls.protocol.record;
 
-import org.secomm.tls.crypto.Algorithms;
+import org.secomm.tls.crypto.AlgorithmFactory;
 import org.secomm.tls.protocol.CipherSuites;
+import org.secomm.tls.protocol.ConnectionState;
 import org.secomm.tls.protocol.SecurityParameters;
 import org.secomm.tls.protocol.record.extensions.ExtensionFactory;
+import org.secomm.tls.protocol.record.extensions.Extensions;
 import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
+import org.secomm.tls.protocol.record.extensions.TlsExtension;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.net.Socket;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The record layer manages handshaking and keeps track of
@@ -57,7 +61,7 @@ public class RecordLayer {
 
     private final ProtocolVersion version;
 
-    private final SecureRandom secureRandom;
+    private ConnectionState connectionState;
 
     private SecurityParameters pendingCipherSpec;
 
@@ -65,16 +69,14 @@ public class RecordLayer {
 
     private byte[] sessionId;
 
-    private Socket clientSocket;
+    private List<Short> currentCipherSuites;
 
-    public RecordLayer(ProtocolVersion version, SecureRandom secureRandom) {
+    private List<TlsExtension> currentTlsExtensions;
+
+    public RecordLayer(ProtocolVersion version, ConnectionState connectionState) {
         this.version = version;
-        this.secureRandom = secureRandom;
-    }
-
-    public void connect(String address, int port) throws IOException {
-
-        clientSocket = new Socket(address, port);
+        this.connectionState = connectionState;
+        this.pendingCipherSpec = connectionState.getSecurityParameters();
     }
 
     public byte[] getClientHello() throws IOException {
@@ -82,14 +84,12 @@ public class RecordLayer {
         TlsPlaintextRecord record = new TlsPlaintextRecord(TlsRecord.HANDSHAKE, version);
 
         ClientHello clientHello = new ClientHello();
-        byte[] randomBytes = new byte[ClientHello.CLIENT_RANDOM_LENGTH];
-        secureRandom.nextBytes(randomBytes);
-        clientHello.setClientRandom(randomBytes);
+        clientHello.setClientRandom(pendingCipherSpec.getClientRandom());
         if (sessionId != null) {
             clientHello.setSessionId(sessionId);
         }
-        clientHello.setCipherSuites(CipherSuites.defaultCipherSuites);
-        clientHello.setExtensions(ExtensionFactory.getCurrentExtensions());
+        clientHello.setCipherSuites(currentCipherSuites != null ? currentCipherSuites : CipherSuites.defaultCipherSuites);
+        clientHello.setExtensions(currentTlsExtensions != null ? currentTlsExtensions : Extensions.defaultExtensions);
 
         HandshakeFragment handshakeFragment = new HandshakeFragment(HandshakeTypes.CLIENT_HELLO, clientHello);
         record.setFragment(handshakeFragment);
@@ -98,17 +98,40 @@ public class RecordLayer {
         return record.encode();
     }
 
-    public TlsPlaintextRecord readPlaintextRecord(InputStream in)
-            throws InvalidEncodingException, InvalidContentTypeException, InvalidHandshakeType, IOException,
-            InvalidExtensionTypeException {
+    public TlsPlaintextRecord readPlaintextRecord(InputStream in) throws IOException, RecordLayerException {
 
         TlsPlaintextRecord record = new TlsPlaintextRecord();
         record.decode(in);
         return record;
     }
 
-    private void initializeSecurityParameters() {
-        pendingCipherSpec = new SecurityParameters(SecurityParameters.ConnectionEnd.CLIENT);
-        pendingCipherSpec.setPrfAlgorithm(Algorithms.getPrfAlgorithm(Algorithms.PrfAlgorithms.TLS_PRF_SHA256));
+    public ServerHello getServerHello(InputStream in) throws IOException, RecordLayerException {
+
+        TlsPlaintextRecord record = readPlaintextRecord(in);
+        TlsFragment fragment = record.getFragment();
+        if (fragment.getFragmentType() != TlsRecord.HANDSHAKE) {
+            throw new InvalidContentTypeException("Not a handshake fragment");
+        }
+        TlsHandshake handshake = ((HandshakeFragment) fragment).getHandshake();
+        if (handshake.getHandshakeType() != HandshakeTypes.SERVER_HELLO) {
+            throw new InvalidHandshakeType("Not a server hello");
+        }
+        return (ServerHello) handshake;
+    }
+
+    public List<TlsExtension> getCurrentExtensions() {
+        return currentTlsExtensions;
+    }
+
+    public void setCurrentExtensions(final List<TlsExtension> currentTlsExtensions) {
+        this.currentTlsExtensions = currentTlsExtensions;
+    }
+
+    public List<Short> getCurrentCipherSuites() {
+        return currentCipherSuites;
+    }
+
+    public void setCurrentCipherSuites(List<Short> cipherSuites) {
+        currentCipherSuites = cipherSuites;
     }
 }
