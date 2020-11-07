@@ -25,6 +25,7 @@ package org.secomm.tls.protocol.record.extensions;
 import org.secomm.tls.protocol.record.InvalidEncodingException;
 import org.secomm.tls.util.EncodingByteBuffer;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -53,6 +54,8 @@ public class SupportedVersions extends AbstractTlsExtension{
 
     enum HandshakeType { CLIENT_HELLO, SERVER_HELLO, HELLO_RETRY }
 
+    public static short TLSv1_2 = 0x0303;
+
     private HandshakeType handshakeType;
 
     /**
@@ -67,6 +70,8 @@ public class SupportedVersions extends AbstractTlsExtension{
 
     public SupportedVersions() {
         super(Extensions.SUPPORTED_VERSIONS);
+        versions = new ArrayList<>();
+        versions.add(TLSv1_2);
     }
 
     public SupportedVersions(List<Short> versions) {
