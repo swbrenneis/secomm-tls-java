@@ -32,7 +32,9 @@ import java.nio.ByteBuffer;
 
 public interface TlsHandshake {
 
-    public byte[] encode();
+    byte[] encode();
 
-    public void decode(EncodingByteBuffer handshakeBuffer) throws IOException, InvalidExtensionTypeException;
+    void decode(EncodingByteBuffer handshakeBuffer) throws IOException, InvalidExtensionTypeException;
+
+    byte getHandshakeType();
 }
