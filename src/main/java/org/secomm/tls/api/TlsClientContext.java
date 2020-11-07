@@ -22,30 +22,46 @@
 
 package org.secomm.tls.api;
 
+import org.secomm.tls.protocol.ConnectionState;
+import org.secomm.tls.protocol.SecurityParameters;
 import org.secomm.tls.protocol.record.RecordLayer;
+import org.secomm.tls.protocol.record.RecordLayerException;
+import org.secomm.tls.protocol.record.ServerHello;
+import org.secomm.tls.protocol.record.extensions.TlsExtension;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.Socket;
 import java.security.SecureRandom;
+import java.util.List;
 
 public class TlsClientContext extends TlsContext {
 
-    private SecureRandom random;
+    private final SecureRandom random;
 
-    private RecordLayer recordLayer;
+    private final RecordLayer recordLayer;
 
-    TlsClientContext(SecureRandom random) {
+    private final ConnectionState connectionState;
+
+    private final SecurityParameters securityParameters;
+
+    private Socket socket;
+
+    TlsClientContext(final SecureRandom random) {
         this.random = random;
-        this.recordLayer = new RecordLayer(RecordLayer.TLS_1_2, random);
+        this.securityParameters = new SecurityParameters(SecurityParameters.ConnectionEnd.CLIENT, random);
+        this.connectionState = new ConnectionState(securityParameters);
+        this.recordLayer = new RecordLayer(RecordLayer.TLS_1_2, connectionState);
     }
 
     /**
      * Simple connect on default SSL port 443
      *
      * @param address
-     * @return
+     * @return TlsPeer if connected, otherwise null
      * @throws IOException
      */
-    public TlsConversation connect(String address) throws IOException {
+    public TlsPeer connect(String address) throws IOException {
         return connect(address, 443);
     }
 
@@ -53,14 +69,36 @@ public class TlsClientContext extends TlsContext {
      *
      * @param address
      * @param port
-     * @return
+     * @return TlsPeer if connected, otherwise null.
      * @throws IOException
      */
-    public TlsConversation connect(String address, int port) throws IOException {
-        TlsConversationImpl tlsClient = new TlsConversationImpl(recordLayer);
-        tlsClient.connect(address, port);
-        recordLayer.connect(address, port);
-        return tlsClient;
+    public TlsPeer connect(String address, int port) throws IOException {
+        TlsPeer tlsPeer = new TlsPeerImpl(connectionState);
+        socket = new Socket(address, port);
+        try {
+            doHandshake();
+            return tlsPeer;
+        } catch (RecordLayerException e) {
+            // TODO Something better than this
+            e.printStackTrace();
+            return null;
+        }
     }
 
+    public void setCipherSuites(List<Short> cipherSuites) {
+        recordLayer.setCurrentCipherSuites(cipherSuites);
+    }
+
+    public void setExtensions(List<TlsExtension> extensions) {
+        recordLayer.setCurrentExtensions(extensions);
+    }
+
+    private void doHandshake() throws IOException, RecordLayerException {
+
+        connectionState.setCurrentState(ConnectionState.CurrentState.HANDSHAKE_STARTED);
+        OutputStream out = socket.getOutputStream();
+        byte[] clientHello = recordLayer.getClientHello();
+        ServerHello serverHello = recordLayer.getServerHello(socket.getInputStream());
+        out.write(clientHello);
+    }
 }

@@ -22,10 +22,19 @@
 
 package org.secomm.tls.api;
 
+import org.secomm.tls.protocol.ConnectionState;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 
-public class TlsPeerImpl implements TlsPeer {
+class TlsPeerImpl implements TlsPeer {
+
+    private final ConnectionState connectionState;
+
+    TlsPeerImpl(final ConnectionState connectionState) {
+        this.connectionState = connectionState;
+    }
+
     @Override
     public String readAll() throws IOException {
         return null;

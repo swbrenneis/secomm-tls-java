@@ -26,15 +26,13 @@ import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
 import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.nio.ByteBuffer;
 
 public interface TlsFragment {
 
-    public byte[] encode();
+    byte[] encode();
 
-    public void decode(EncodingByteBuffer fragmentBuffer) throws IOException, InvalidHandshakeType,
+    void decode(EncodingByteBuffer fragmentBuffer) throws IOException, InvalidHandshakeType,
             InvalidEncodingException, InvalidExtensionTypeException;
 
+    byte getFragmentType();
 }

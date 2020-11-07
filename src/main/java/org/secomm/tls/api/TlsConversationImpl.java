@@ -36,7 +36,6 @@ class TlsConversationImpl implements TlsConversation {
     }
 
     public void connect(String address, int port) throws IOException {
-        recordLayer.connect(address, port);
     }
 
     @Override
