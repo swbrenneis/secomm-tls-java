@@ -48,4 +48,9 @@ public class HelloRequest implements TlsHandshake {
     public byte[] encode() {
         return new byte[0];
     }
+
+    @Override
+    public byte getHandshakeType() {
+        return HandshakeTypes.HELLO_REQUEST;
+    }
 }

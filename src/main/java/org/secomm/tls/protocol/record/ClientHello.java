@@ -153,6 +153,11 @@ public class ClientHello implements TlsHandshake {
         return buffer.toArray();
     }
 
+    @Override
+    public byte getHandshakeType() {
+        return HandshakeTypes.CLIENT_HELLO;
+    }
+
     public void setClientRandom(byte[] clientRandom) {
         if (clientRandom.length != CLIENT_RANDOM_LENGTH) {
             throw new InvalidParameterException("Invalid client random size");
