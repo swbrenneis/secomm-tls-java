@@ -93,21 +93,6 @@ public class ClientHelloTest {
     }
 
     @Test
-    public void testSendClientHello() throws Exception {
-
-        SecureRandom random = SecureRandom.getInstanceStrong();
-        RecordLayer recordLayer = new RecordLayer(RecordLayer.TLS_1_2, random);
-//        List<String> hostNames = new ArrayList<>();
-//        hostNames.add("www.example.com");
-//        ExtensionFactory.addExtension(new ServerNameIndication(hostNames));
-        byte[] encoded = recordLayer.getClientHello();
-        Socket socket = new Socket("192.168.1.3", 9100);
-        socket.getOutputStream().write(encoded);
-        TlsPlaintextRecord record = recordLayer.readPlaintextRecord(socket.getInputStream());
-        TlsFragment fragment = record.getFragment();
-    }
-
-    @Test
     public void analyzeClientHello() throws Exception {
 
 /*
