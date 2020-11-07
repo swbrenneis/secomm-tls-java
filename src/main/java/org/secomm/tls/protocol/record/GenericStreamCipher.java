@@ -61,6 +61,11 @@ public class GenericStreamCipher implements TlsFragment {
     }
 
     @Override
+    public byte getFragmentType() {
+        return 0;
+    }
+
+    @Override
     public byte[] encode() {
 
         EncodingByteBuffer buffer = EncodingByteBuffer.allocate(1024);

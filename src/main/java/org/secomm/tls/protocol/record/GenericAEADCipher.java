@@ -58,4 +58,9 @@ public class GenericAEADCipher implements TlsFragment {
     public void decode(EncodingByteBuffer buffer) throws IOException, InvalidHandshakeType, InvalidEncodingException {
 
     }
+
+    @Override
+    public byte getFragmentType() {
+        return 0;
+    }
 }

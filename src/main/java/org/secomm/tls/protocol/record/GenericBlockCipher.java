@@ -69,4 +69,9 @@ public class GenericBlockCipher implements TlsFragment {
 
         // Hmmm
     }
+
+    @Override
+    public byte getFragmentType() {
+        return 0;
+    }
 }
