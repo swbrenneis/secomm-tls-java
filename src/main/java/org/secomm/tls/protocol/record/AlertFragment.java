@@ -81,7 +81,12 @@ public class AlertFragment implements TlsFragment {
         alertLevel = buffer.get();
         alertDescription = buffer.get();
     }
-    
+
+    @Override
+    public byte getFragmentType() {
+        return TlsRecord.ALERT;
+    }
+
     @Override
     public byte[] encode() {
         return new byte[] { alertLevel, alertDescription };

@@ -53,6 +53,11 @@ public class ChangeCipherSpecFragment implements TlsFragment {
     }
 
     @Override
+    public byte getFragmentType() {
+        return TlsRecord.CHANGE_CIPHER_SPEC;
+    }
+
+    @Override
     public byte[] encode() {
         return new byte[] { type };
     }

@@ -47,4 +47,9 @@ public class ApplicationDataFragment implements TlsFragment {
     public void decode(EncodingByteBuffer buffer) throws IOException, InvalidHandshakeType, InvalidEncodingException {
 
     }
+
+    @Override
+    public byte getFragmentType() {
+        return TlsRecord.APPLICATION_DATA;
+    }
 }
