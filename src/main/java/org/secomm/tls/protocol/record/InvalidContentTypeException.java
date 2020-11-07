@@ -22,7 +22,7 @@
 
 package org.secomm.tls.protocol.record;
 
-public class InvalidContentTypeException extends Exception {
+public class InvalidContentTypeException extends RecordLayerException {
 
     public InvalidContentTypeException(String message) {
         super(message);

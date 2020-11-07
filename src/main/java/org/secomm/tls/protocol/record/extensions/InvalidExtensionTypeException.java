@@ -22,7 +22,9 @@
 
 package org.secomm.tls.protocol.record.extensions;
 
-public class InvalidExtensionTypeException extends Exception {
+import org.secomm.tls.protocol.record.RecordLayerException;
+
+public class InvalidExtensionTypeException extends RecordLayerException {
     public InvalidExtensionTypeException(String message) {
         super(message);
     }

@@ -22,7 +22,7 @@
 
 package org.secomm.tls.protocol.record;
 
-public class InvalidEncodingException extends Exception {
+public class InvalidEncodingException extends RecordLayerException {
     public InvalidEncodingException(String message) {
         super(message);
     }
