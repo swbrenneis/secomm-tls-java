@@ -23,15 +23,10 @@
 package org.secomm.tls.protocol.record;
 
 import org.apache.commons.io.IOUtils;
-import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
 import org.secomm.tls.util.EncodingByteBuffer;
-import org.secomm.tls.util.NumberReaderWriter;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
 import java.nio.ByteBuffer;
 
 public class TlsPlaintextRecord extends TlsRecord {
@@ -43,19 +38,14 @@ public class TlsPlaintextRecord extends TlsRecord {
     public TlsPlaintextRecord() {
     }
 
-    public void decode(InputStream in) throws RecordLayerException, IOException {
+    public void decode(ByteBuffer recordBuffer) throws RecordLayerException, IOException {
 
-        EncodingByteBuffer recordBuffer = EncodingByteBuffer.wrap(IOUtils.toByteArray(in));
-        if (recordBuffer.hasRemaining()) {
-            contentType = recordBuffer.get();
-            version = new RecordLayer.ProtocolVersion(recordBuffer.get(), recordBuffer.get());
-            fragment = ContentFactory.getContent(contentType);
-            short length = recordBuffer.getShort();
-            byte[] fragmentBytes = new byte[length];
-            recordBuffer.get(fragmentBytes);
-            EncodingByteBuffer fragmentBuffer = EncodingByteBuffer.wrap(fragmentBytes);
-            fragment.decode(fragmentBuffer);
-        }
+        fragment = ContentFactory.getContent(contentType);
+        short length = recordBuffer.getShort();
+        byte[] fragmentBytes = new byte[length];
+        recordBuffer.get(fragmentBytes);
+        EncodingByteBuffer fragmentBuffer = EncodingByteBuffer.wrap(fragmentBytes);
+        fragment.decode(fragmentBuffer);
     }
 
     public byte[] encode() {

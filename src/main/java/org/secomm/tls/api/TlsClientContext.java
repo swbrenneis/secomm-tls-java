@@ -22,18 +22,18 @@
 
 package org.secomm.tls.api;
 
+import org.secomm.tls.net.ClientConnectionManager;
+import org.secomm.tls.protocol.ClientHandshake;
 import org.secomm.tls.protocol.ConnectionState;
 import org.secomm.tls.protocol.SecurityParameters;
 import org.secomm.tls.protocol.record.RecordLayer;
-import org.secomm.tls.protocol.record.RecordLayerException;
-import org.secomm.tls.protocol.record.ServerHello;
 import org.secomm.tls.protocol.record.extensions.TlsExtension;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.Socket;
 import java.security.SecureRandom;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 public class TlsClientContext extends TlsContext {
 
@@ -45,7 +45,7 @@ public class TlsClientContext extends TlsContext {
 
     private final SecurityParameters securityParameters;
 
-    private Socket socket;
+    private ClientConnectionManager connectionManager;
 
     TlsClientContext(final SecureRandom random) {
         this.random = random;
@@ -73,13 +73,12 @@ public class TlsClientContext extends TlsContext {
      * @throws IOException
      */
     public TlsPeer connect(String address, int port) throws IOException {
-        TlsPeer tlsPeer = new TlsPeerImpl(connectionState);
-        socket = new Socket(address, port);
+        connectionManager = new ClientConnectionManager(address, port);
+        ClientHandshake handshake = new ClientHandshake(connectionManager, connectionState, recordLayer);
+        Future<TlsPeer> future = handshake.doHandshake();
         try {
-            doHandshake();
-            return tlsPeer;
-        } catch (RecordLayerException e) {
-            // TODO Something better than this
+            return future.get();
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
             return null;
         }
@@ -93,12 +92,4 @@ public class TlsClientContext extends TlsContext {
         recordLayer.setCurrentExtensions(extensions);
     }
 
-    private void doHandshake() throws IOException, RecordLayerException {
-
-        connectionState.setCurrentState(ConnectionState.CurrentState.HANDSHAKE_STARTED);
-        OutputStream out = socket.getOutputStream();
-        byte[] clientHello = recordLayer.getClientHello();
-        ServerHello serverHello = recordLayer.getServerHello(socket.getInputStream());
-        out.write(clientHello);
-    }
 }

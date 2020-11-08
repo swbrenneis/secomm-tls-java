@@ -22,23 +22,20 @@
 
 package org.secomm.tls.protocol.record;
 
-import org.secomm.tls.crypto.AlgorithmFactory;
+import org.secomm.tls.net.ConnectionManager;
 import org.secomm.tls.protocol.CipherSuites;
 import org.secomm.tls.protocol.ConnectionState;
 import org.secomm.tls.protocol.SecurityParameters;
-import org.secomm.tls.protocol.record.extensions.ExtensionFactory;
 import org.secomm.tls.protocol.record.extensions.Extensions;
-import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
 import org.secomm.tls.protocol.record.extensions.TlsExtension;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.security.SecureRandom;
-import java.util.ArrayList;
+import java.nio.ByteBuffer;
+import java.rmi.RemoteException;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 /**
  * The record layer manages handshaking and keeps track of
@@ -58,6 +55,8 @@ public class RecordLayer {
 
     public static final ProtocolVersion TLS_1_0 = new ProtocolVersion((byte) 0x03, (byte) 0x01);
     public static final ProtocolVersion TLS_1_2 = new ProtocolVersion((byte) 0x03, (byte) 0x03);
+
+    public static final int RECORD_HEADER_LENGTH = 5;
 
     private final ProtocolVersion version;
 
@@ -81,7 +80,7 @@ public class RecordLayer {
 
     public byte[] getClientHello() throws IOException {
 
-        TlsPlaintextRecord record = new TlsPlaintextRecord(TlsRecord.HANDSHAKE, version);
+        TlsPlaintextRecord record = new TlsPlaintextRecord(FragmentTypes.HANDSHAKE, version);
 
         ClientHello clientHello = new ClientHello();
         clientHello.setClientRandom(pendingCipherSpec.getClientRandom());
@@ -98,18 +97,42 @@ public class RecordLayer {
         return record.encode();
     }
 
-    public TlsPlaintextRecord readPlaintextRecord(InputStream in) throws IOException, RecordLayerException {
 
-        TlsPlaintextRecord record = new TlsPlaintextRecord();
-        record.decode(in);
-        return record;
+    public TlsPlaintextRecord readPlaintextRecord(ConnectionManager connectionManager)
+            throws IOException, RecordLayerException {
+
+        ByteBuffer buffer = ByteBuffer.allocate(5);
+        Future<Integer> future = connectionManager.read(buffer);
+        try {
+            Integer length = future.get();
+            if (length != 5) {
+                throw new RecordLayerException("Failed to read record header");
+            }
+            buffer.flip();
+            TlsPlaintextRecord record = new TlsPlaintextRecord(buffer.get(),
+                    new ProtocolVersion(buffer.get(), buffer.get()));
+            short fragmentLength = buffer.getShort();
+            buffer = ByteBuffer.allocate(fragmentLength);
+            future = connectionManager.read(buffer);
+            length = future.get();
+            if (length.shortValue() != fragmentLength) {
+                throw new RemoteException("Failed to read fragment");
+            }
+            buffer.flip();
+            record.decode(buffer);
+            return record;
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
+/*
     public ServerHello getServerHello(InputStream in) throws IOException, RecordLayerException {
 
         TlsPlaintextRecord record = readPlaintextRecord(in);
         TlsFragment fragment = record.getFragment();
-        if (fragment.getFragmentType() != TlsRecord.HANDSHAKE) {
+        if (fragment.getFragmentType() != FragmentTypes.HANDSHAKE) {
             throw new InvalidContentTypeException("Not a handshake fragment");
         }
         TlsHandshake handshake = ((HandshakeFragment) fragment).getHandshake();
@@ -122,6 +145,7 @@ public class RecordLayer {
     public List<TlsExtension> getCurrentExtensions() {
         return currentTlsExtensions;
     }
+*/
 
     public void setCurrentExtensions(final List<TlsExtension> currentTlsExtensions) {
         this.currentTlsExtensions = currentTlsExtensions;
