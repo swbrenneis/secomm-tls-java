@@ -58,7 +58,7 @@ public class ClientHelloTest {
         ServerSocket serverSocket = new ServerSocket(8443);
         Socket clientSocket = serverSocket.accept();
         TlsPlaintextRecord record = new TlsPlaintextRecord();
-        record.decode(clientSocket.getInputStream());
+//        record.decode(clientSocket.getInputStream());
         serverSocket.close();
 
         HandshakeFragment handshakeFragment = record.getFragment();

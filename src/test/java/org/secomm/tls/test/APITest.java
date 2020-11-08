@@ -51,6 +51,6 @@ public class APITest {
 
         context.setCipherSuites(cipherSuites);
         context.setExtensions(new ArrayList<>());   // No extensions
-        TlsPeer peer = context.connect("192.168.1.3", 9100);
+        TlsPeer peer = context.connect("192.168.1.3", 9200);
     }
 }
