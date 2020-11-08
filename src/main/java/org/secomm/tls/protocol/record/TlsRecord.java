@@ -26,14 +26,6 @@ import org.secomm.tls.protocol.record.TlsFragment;
 
 public abstract class TlsRecord {
 
-    /**
-     * Content types
-     */
-    public static final byte CHANGE_CIPHER_SPEC = 20;
-    public static final byte ALERT = 21;
-    public static final byte HANDSHAKE = 22;
-    public static final byte APPLICATION_DATA = 23;
-
     protected byte contentType;
 
     protected RecordLayer.ProtocolVersion version;

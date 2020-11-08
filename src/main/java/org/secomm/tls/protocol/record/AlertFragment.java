@@ -84,7 +84,7 @@ public class AlertFragment implements TlsFragment {
 
     @Override
     public byte getFragmentType() {
-        return TlsRecord.ALERT;
+        return FragmentTypes.ALERT;
     }
 
     @Override

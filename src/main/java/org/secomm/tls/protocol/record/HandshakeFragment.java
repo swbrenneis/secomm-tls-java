@@ -88,6 +88,6 @@ public class HandshakeFragment implements TlsFragment {
 
     @Override
     public byte getFragmentType() {
-        return TlsRecord.HANDSHAKE;
+        return FragmentTypes.HANDSHAKE;
     }
 }

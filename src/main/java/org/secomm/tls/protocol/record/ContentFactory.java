@@ -33,10 +33,10 @@ public class ContentFactory {
     }
 
     private static final Map<Byte, FragmentBuilder<?>> contentMap = Stream.of( new Object[][] {
-            { TlsRecord.CHANGE_CIPHER_SPEC, new ChangeCipherSpecFragment.Builder() },
-            { TlsRecord.ALERT, new AlertFragment.Builder() },
-            { TlsRecord.HANDSHAKE, new HandshakeFragment.Builder() },
-            { TlsRecord.APPLICATION_DATA, new ApplicationDataFragment.Builder() }
+            { FragmentTypes.CHANGE_CIPHER_SPEC, new ChangeCipherSpecFragment.Builder() },
+            { FragmentTypes.ALERT, new AlertFragment.Builder() },
+            { FragmentTypes.HANDSHAKE, new HandshakeFragment.Builder() },
+            { FragmentTypes.APPLICATION_DATA, new ApplicationDataFragment.Builder() }
     }).collect(Collectors.toMap(e -> (Byte) e[0], e -> (FragmentBuilder<?>) e[1]));
 
     public static <T extends TlsFragment> T getContent(byte type)

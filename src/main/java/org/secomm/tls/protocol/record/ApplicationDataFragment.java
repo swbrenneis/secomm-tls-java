@@ -50,6 +50,6 @@ public class ApplicationDataFragment implements TlsFragment {
 
     @Override
     public byte getFragmentType() {
-        return TlsRecord.APPLICATION_DATA;
+        return FragmentTypes.APPLICATION_DATA;
     }
 }
