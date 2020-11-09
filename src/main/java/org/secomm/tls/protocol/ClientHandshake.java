@@ -23,6 +23,7 @@
 package org.secomm.tls.protocol;
 
 import org.secomm.tls.api.TlsPeer;
+import org.secomm.tls.crypto.CipherStateBuilder;
 import org.secomm.tls.net.ClientConnectionManager;
 import org.secomm.tls.net.ConnectionManager;
 import org.secomm.tls.protocol.record.FragmentTypes;
@@ -155,7 +156,9 @@ public class ClientHandshake {
     }
 
     private void evaluateServerHello(ServerHello serverHello) {
-
+        SecurityParameters securityParameters = connectionState.getSecurityParameters();
+        securityParameters.setServerRandom(serverHello.getServerRandom());
+        CipherStateBuilder.setSecurityParameters(securityParameters, serverHello.getCipherSuite());
     }
 
     private <T> T waitOnFuture(Future<T> future) {

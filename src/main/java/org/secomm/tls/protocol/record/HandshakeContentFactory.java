@@ -33,7 +33,8 @@ public class HandshakeContentFactory {
     }
 
     private static Map<Byte, HandshakeBuilder<?>> handshakeBuilderMap = Stream.of( new Object[][] {
-            { HandshakeTypes.CLIENT_HELLO, new ClientHello.Builder() }
+            { HandshakeTypes.CLIENT_HELLO, new ClientHello.Builder() },
+            { HandshakeTypes.SERVER_HELLO, new ServerHello.Builder()}
     }).collect(Collectors.toMap(e -> (Byte) e[0], e -> (HandshakeBuilder<?>) e[1]));
 
     public static <T extends TlsHandshake> T getHandshake(byte handshakeType) throws InvalidHandshakeType {

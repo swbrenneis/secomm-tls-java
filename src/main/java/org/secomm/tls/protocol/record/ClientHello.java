@@ -95,20 +95,22 @@ public class ClientHello implements TlsHandshake {
         }
 
         // Extensions
-        tlsExtensions = new ArrayList<>();
-        extensionsLength = buffer.getShort();
-        if (extensionsLength > 0) {
-            int byteCount = 0;
-            while (byteCount < extensionsLength) {
-                short extensionType = buffer.getShort();
-                byteCount += 2;
-                TlsExtension tlsExtension = ExtensionFactory.getExtension(extensionType);
-                // There has to be a better way
-                if (tlsExtension instanceof KeyShare) {
-                    ((KeyShare) tlsExtension).setKeyShareType(KeyShare.KeyShareType.CLIENT_HELLO);
+        if (buffer.hasRemaining()) {
+            tlsExtensions = new ArrayList<>();
+            extensionsLength = buffer.getShort();
+            if (extensionsLength > 0) {
+                int byteCount = 0;
+                while (byteCount < extensionsLength) {
+                    short extensionType = buffer.getShort();
+                    byteCount += 2;
+                    TlsExtension tlsExtension = ExtensionFactory.getExtension(extensionType);
+                    // There has to be a better way
+                    if (tlsExtension instanceof KeyShare) {
+                        ((KeyShare) tlsExtension).setKeyShareType(KeyShare.KeyShareType.CLIENT_HELLO);
+                    }
+                    byteCount += tlsExtension.decode(buffer);
+                    tlsExtensions.add(tlsExtension);
                 }
-                byteCount += tlsExtension.decode(buffer);
-                tlsExtensions.add(tlsExtension);
             }
         }
     }

@@ -91,6 +91,8 @@ public class SecurityParameters {
         } else {
             clientRandom = random;
         }
+        prfAlgorithm = PRFAlgorithm.TLS_PRF_SHA256;     // The only choice
+        compressionMethod = CompressionMethod.NULL;     // Always
     }
 
     public ConnectionEnd getEntity() {

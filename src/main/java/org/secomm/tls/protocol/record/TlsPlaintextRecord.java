@@ -38,14 +38,11 @@ public class TlsPlaintextRecord extends TlsRecord {
     public TlsPlaintextRecord() {
     }
 
-    public void decode(ByteBuffer recordBuffer) throws RecordLayerException, IOException {
+    public void decode(byte[] recordBytes) throws RecordLayerException, IOException {
 
+        EncodingByteBuffer recordBuffer = EncodingByteBuffer.wrap(recordBytes);
         fragment = ContentFactory.getContent(contentType);
-        short length = recordBuffer.getShort();
-        byte[] fragmentBytes = new byte[length];
-        recordBuffer.get(fragmentBytes);
-        EncodingByteBuffer fragmentBuffer = EncodingByteBuffer.wrap(fragmentBytes);
-        fragment.decode(fragmentBuffer);
+        fragment.decode(recordBuffer);
     }
 
     public byte[] encode() {

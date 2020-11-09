@@ -23,7 +23,7 @@
 package org.secomm.tls.protocol.record;
 
 import org.secomm.tls.net.ConnectionManager;
-import org.secomm.tls.protocol.CipherSuites;
+import org.secomm.tls.crypto.CipherSuites;
 import org.secomm.tls.protocol.ConnectionState;
 import org.secomm.tls.protocol.SecurityParameters;
 import org.secomm.tls.protocol.record.extensions.Extensions;
@@ -119,7 +119,11 @@ public class RecordLayer {
                 throw new RemoteException("Failed to read fragment");
             }
             buffer.flip();
-            record.decode(buffer);
+            // We're going through all of this thrashing around because ByteBuffer
+            // isn't really meant for what we're doing.
+            byte[] recordBytes = new byte[length];
+            buffer.get(recordBytes);
+            record.decode(recordBytes);
             return record;
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();

@@ -62,7 +62,6 @@ public class HandshakeFragment implements TlsFragment {
             throws InvalidHandshakeType, IOException, InvalidExtensionTypeException {
         
         handshakeType = handshakeBuffer.get();
-//        int handshakeLength = NumberReaderWriter.read24Bit(handshakeBuffer);
         body = HandshakeContentFactory.getHandshake(handshakeType);
         int handshakeLength = handshakeBuffer.get24Bit();
         byte[] bytes = new byte[handshakeLength];
