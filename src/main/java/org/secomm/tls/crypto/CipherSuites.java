@@ -20,7 +20,7 @@
  *
  */
 
-package org.secomm.tls.protocol;
+package org.secomm.tls.crypto;
 
 import java.util.ArrayList;
 import java.util.List;
