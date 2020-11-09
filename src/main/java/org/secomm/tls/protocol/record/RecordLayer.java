@@ -23,7 +23,7 @@
 package org.secomm.tls.protocol.record;
 
 import org.secomm.tls.net.ConnectionManager;
-import org.secomm.tls.crypto.CipherSuites;
+import org.secomm.tls.protocol.CipherSuites;
 import org.secomm.tls.protocol.ConnectionState;
 import org.secomm.tls.protocol.SecurityParameters;
 import org.secomm.tls.protocol.record.extensions.Extensions;
@@ -97,6 +97,9 @@ public class RecordLayer {
         return record.encode();
     }
 
+    public byte[] getAlert(byte alertLevel, byte alertDescription) {
+        return new byte[0];
+    }
 
     public TlsPlaintextRecord readPlaintextRecord(ConnectionManager connectionManager)
             throws IOException, RecordLayerException {

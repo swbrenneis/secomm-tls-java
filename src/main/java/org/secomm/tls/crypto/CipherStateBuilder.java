@@ -23,11 +23,50 @@
 package org.secomm.tls.crypto;
 
 import org.secomm.tls.protocol.SecurityParameters;
+import org.secomm.tls.protocol.UnknownCipherSuiteException;
+
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CipherStateBuilder {
 
-    public static void setSecurityParameters(SecurityParameters parameters, short cipherSuite) {
+    private static final Map<Short, SecurityParameters.BulkCipherAlgorithm> cipherAlgorithmMap =
+            Stream.of(new Object[][] {
+                    { 0x0a, SecurityParameters.BulkCipherAlgorithm.TRIPLEDES },
+                    { 0x39, SecurityParameters.BulkCipherAlgorithm.AES }
+    }).collect(Collectors.toMap(e -> (Short) e[0], e -> (SecurityParameters.BulkCipherAlgorithm) e[1]));
 
+    private static final Map<Short, SecurityParameters.CipherType> cipherTypeMap = Stream.of( new Object[][] {
+            { 0x0a, SecurityParameters.CipherType.BLOCK },
+            { 0x39, SecurityParameters.CipherType.BLOCK }
+    }).collect(Collectors.toMap(e -> (Short) e[0], e -> (SecurityParameters.CipherType) e[1]));
 
+    private static final Map<Short, SecurityParameters.MACAlgorithm> macAlgorithmMap = Stream.of(new Object[][] {
+            { 0x0a, SecurityParameters.MACAlgorithm.HMAC_SHA1 },
+            { 0x39, SecurityParameters.MACAlgorithm.HMAC_SHA1 }
+    }).collect(Collectors.toMap(e -> (Short) e[0], e -> (SecurityParameters.MACAlgorithm) e[1]));
+
+    private static final Map<Short, Byte> encryptionKeyLengthMap = Stream.of(new Object[][] {
+            { 0x39, 160 },
+            { 0x39, 256 }
+    }).collect(Collectors.toMap(e -> (Short) e[0], e -> (Byte) e[1]));
+
+    private static final Map<Short, Byte> macLengthMap = Stream.of(new Object[][] {
+            { 0x0a, 160 },
+            { 0x39, 160 }
+    }).collect(Collectors.toMap(e -> (Short) e[0], e -> (Byte) e[1]));
+
+    public static void setSecurityParameters(SecurityParameters parameters, short cipherSuite)
+            throws UnknownCipherSuiteException {
+
+        SecurityParameters.BulkCipherAlgorithm algorithm = cipherAlgorithmMap.get(cipherSuite);
+        if (algorithm == null) {
+            throw new UnknownCipherSuiteException("Cipher suite " + cipherSuite);
+        }
+        parameters.setBulkCipherAlgorithm(algorithm);
+        parameters.setCipherType(cipherTypeMap.get(cipherSuite));
+        parameters.setEncryptionKeyLength(encryptionKeyLengthMap.get(cipherSuite));
+        parameters.setMacLength(macLengthMap.get(cipherSuite));
     }
 }

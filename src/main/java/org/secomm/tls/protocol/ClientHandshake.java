@@ -26,6 +26,7 @@ import org.secomm.tls.api.TlsPeer;
 import org.secomm.tls.crypto.CipherStateBuilder;
 import org.secomm.tls.net.ClientConnectionManager;
 import org.secomm.tls.net.ConnectionManager;
+import org.secomm.tls.protocol.record.AlertFragment;
 import org.secomm.tls.protocol.record.FragmentTypes;
 import org.secomm.tls.protocol.record.HandshakeFragment;
 import org.secomm.tls.protocol.record.HandshakeTypes;
@@ -40,7 +41,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -158,7 +158,33 @@ public class ClientHandshake {
     private void evaluateServerHello(ServerHello serverHello) {
         SecurityParameters securityParameters = connectionState.getSecurityParameters();
         securityParameters.setServerRandom(serverHello.getServerRandom());
-        CipherStateBuilder.setSecurityParameters(securityParameters, serverHello.getCipherSuite());
+        if (!recordLayer.getCurrentCipherSuites().contains(serverHello.getCipherSuite())) {
+            sendFatalAlert(AlertFragment.HANDSHAKE_FAILURE);
+        } else {
+            try {
+                CipherStateBuilder.setSecurityParameters(securityParameters, serverHello.getCipherSuite());
+            } catch (UnknownCipherSuiteException e) {
+                sendFatalAlert(AlertFragment.HANDSHAKE_FAILURE);
+            }
+        }
+    }
+
+    private void sendFatalAlert(byte alertDescription) {
+        byte[] alert = recordLayer.getAlert(AlertFragment.FATAL, alertDescription);
+        connectionManager.write(ByteBuffer.wrap(alert), new CompletionHandler<Integer, ConnectionManager>() {
+            @Override
+            public void completed(Integer result, ConnectionManager attachment) {
+                attachment.close();
+                signalComplete();
+            }
+
+            @Override
+            public void failed(Throwable exc, ConnectionManager attachment) {
+                // Don't care
+                attachment.close();
+                signalComplete();
+            }
+        });
     }
 
     private <T> T waitOnFuture(Future<T> future) {
