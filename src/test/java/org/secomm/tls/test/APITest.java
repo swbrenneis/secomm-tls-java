@@ -26,8 +26,7 @@ import org.junit.Test;
 import org.secomm.tls.api.TlsClientContext;
 import org.secomm.tls.api.TlsContext;
 import org.secomm.tls.api.TlsPeer;
-import org.secomm.tls.protocol.CipherSuites;
-import org.secomm.tls.protocol.record.extensions.TlsExtension;
+import org.secomm.tls.crypto.CipherSuites;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
