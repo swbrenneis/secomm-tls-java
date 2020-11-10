@@ -22,9 +22,9 @@
 
 package org.secomm.tls.protocol.record;
 
-public class InvalidContentTypeException extends RecordLayerException {
+public class InvalidFragmentTypeException extends RecordLayerException {
 
-    public InvalidContentTypeException(String message) {
+    public InvalidFragmentTypeException(String message) {
         super(message);
     }
 }

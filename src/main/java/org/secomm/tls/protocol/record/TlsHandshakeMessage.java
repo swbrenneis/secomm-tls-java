@@ -22,25 +22,19 @@
 
 package org.secomm.tls.protocol.record;
 
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
+import org.secomm.tls.util.EncodingByteBuffer;
 
-public class HandshakeContentFactory {
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.nio.ByteBuffer;
 
-    public interface HandshakeBuilder<T extends TlsHandshake> {
-        public T build();
-    }
+public interface TlsHandshakeMessage {
 
-    private static Map<Byte, HandshakeBuilder<?>> handshakeBuilderMap = Stream.of( new Object[][] {
-            { HandshakeTypes.CLIENT_HELLO, new ClientHello.Builder() },
-            { HandshakeTypes.SERVER_HELLO, new ServerHello.Builder()}
-    }).collect(Collectors.toMap(e -> (Byte) e[0], e -> (HandshakeBuilder<?>) e[1]));
+    byte[] encode();
 
-    public static <T extends TlsHandshake> T getHandshake(byte handshakeType) throws InvalidHandshakeType {
-        if (!handshakeBuilderMap.containsKey(handshakeType)) {
-            throw new InvalidHandshakeType("Unknown handshake type " + handshakeType);
-        }
-        return (T) handshakeBuilderMap.get(handshakeType).build();
-    }
+    void decode(EncodingByteBuffer handshakeBuffer) throws IOException, InvalidExtensionTypeException;
+
+    byte getHandshakeType();
 }

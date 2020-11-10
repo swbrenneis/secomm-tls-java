@@ -22,8 +22,29 @@
 
 package org.secomm.tls.protocol.record;
 
-public class InvalidHandshakeType extends RecordLayerException {
-    public InvalidHandshakeType(String message) {
-        super(message);
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public class FragmentFactory {
+
+    public interface FragmentBuilder <T extends TlsFragment> {
+        public T build() throws InvalidEncodingException, InvalidHandshakeMessageType;
+    }
+
+    private static final Map<Byte, FragmentBuilder<?>> contentMap = Stream.of( new Object[][] {
+            { FragmentTypes.CHANGE_CIPHER_SPEC, new ChangeCipherSpecFragment.Builder() },
+            { FragmentTypes.ALERT, new AlertFragment.Builder() },
+            { FragmentTypes.HANDSHAKE, new HandshakeFragment.Builder() },
+            { FragmentTypes.APPLICATION_DATA, new ApplicationDataFragment.Builder() }
+    }).collect(Collectors.toMap(e -> (Byte) e[0], e -> (FragmentBuilder<?>) e[1]));
+
+    public static <T extends TlsFragment> T getContent(byte type)
+            throws InvalidFragmentTypeException, InvalidEncodingException, InvalidHandshakeMessageType {
+        if (!contentMap.containsKey(type)) {
+            throw new InvalidFragmentTypeException("Unknown content type " + type);
+        }
+        // Safe typecast
+        return (T) contentMap.get(type).build();
     }
 }

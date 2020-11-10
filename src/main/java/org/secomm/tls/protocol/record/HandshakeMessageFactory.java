@@ -26,25 +26,24 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ContentFactory {
+public class HandshakeMessageFactory {
 
-    public interface FragmentBuilder <T extends TlsFragment> {
-        public T build() throws InvalidEncodingException, InvalidHandshakeType;
+    public interface HandshakeBuilder<T extends TlsHandshakeMessage> {
+        public T build();
     }
 
-    private static final Map<Byte, FragmentBuilder<?>> contentMap = Stream.of( new Object[][] {
-            { FragmentTypes.CHANGE_CIPHER_SPEC, new ChangeCipherSpecFragment.Builder() },
-            { FragmentTypes.ALERT, new AlertFragment.Builder() },
-            { FragmentTypes.HANDSHAKE, new HandshakeFragment.Builder() },
-            { FragmentTypes.APPLICATION_DATA, new ApplicationDataFragment.Builder() }
-    }).collect(Collectors.toMap(e -> (Byte) e[0], e -> (FragmentBuilder<?>) e[1]));
+    private static final Map<Byte, HandshakeBuilder<?>> handshakeBuilderMap = Stream.of( new Object[][] {
+            { HandshakeMessageTypes.CLIENT_HELLO, new ClientHello.Builder() },
+            { HandshakeMessageTypes.SERVER_HELLO, new ServerHello.Builder() },
+            { HandshakeMessageTypes.CERTIFICATE, new ServerCertificate.Builder() },
+            { HandshakeMessageTypes.SERVER_KEY_EXCHANGE, new ServerKeyExchange.Builder() },
+            { HandshakeMessageTypes.SERVER_HELLO_DONE, new ServerHelloDone.Builder() }
+    }).collect(Collectors.toMap(e -> (Byte) e[0], e -> (HandshakeBuilder<?>) e[1]));
 
-    public static <T extends TlsFragment> T getContent(byte type)
-            throws InvalidContentTypeException, InvalidEncodingException, InvalidHandshakeType {
-        if (!contentMap.containsKey(type)) {
-            throw new InvalidContentTypeException("Unknown content type " + type);
+    public static <T extends TlsHandshakeMessage> T getHandshake(byte handshakeType) throws InvalidHandshakeMessageType {
+        if (!handshakeBuilderMap.containsKey(handshakeType)) {
+            throw new InvalidHandshakeMessageType("Unknown handshake type " + handshakeType);
         }
-        // Safe typecast
-        return (T) contentMap.get(type).build();
+        return (T) handshakeBuilderMap.get(handshakeType).build();
     }
 }
