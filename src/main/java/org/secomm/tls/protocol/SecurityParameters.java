@@ -127,24 +127,24 @@ public class SecurityParameters {
         return prfAlgorithm;
     }
 
-    public void setPrfAlgorithm(PRFAlgorithm prfAlgorithm) {
-        this.prfAlgorithm = prfAlgorithm;
+    public void setPrfAlgorithm(String prfAlgorithm) {
+        this.prfAlgorithm = PRFAlgorithm.valueOf(prfAlgorithm);
     }
 
     public BulkCipherAlgorithm getBulkCipherAlgorithm() {
         return bulkCipherAlgorithm;
     }
 
-    public void setBulkCipherAlgorithm(BulkCipherAlgorithm bulkCipherAlgorithm) {
-        this.bulkCipherAlgorithm = bulkCipherAlgorithm;
+    public void setBulkCipherAlgorithm(String bulkCipherAlgorithm) {
+        this.bulkCipherAlgorithm = BulkCipherAlgorithm.valueOf(bulkCipherAlgorithm);
     }
 
     public CipherType getCipherType() {
         return cipherType;
     }
 
-    public void setCipherType(CipherType cipherType) {
-        this.cipherType = cipherType;
+    public void setCipherType(String cipherType) {
+        this.cipherType = CipherType.valueOf(cipherType);
     }
 
     public byte getEncryptionKeyLength() {
@@ -183,8 +183,8 @@ public class SecurityParameters {
         return macAlgorithm;
     }
 
-    public void setMacAlgorithm(MACAlgorithm macAlgorithm) {
-        this.macAlgorithm = macAlgorithm;
+    public void setMacAlgorithm(String macAlgorithm) {
+        this.macAlgorithm = MACAlgorithm.valueOf(macAlgorithm);
     }
 
     public byte getMacLength() {

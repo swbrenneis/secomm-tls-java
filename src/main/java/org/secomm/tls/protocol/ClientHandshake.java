@@ -29,17 +29,22 @@ import org.secomm.tls.net.ConnectionManager;
 import org.secomm.tls.protocol.record.AlertFragment;
 import org.secomm.tls.protocol.record.FragmentTypes;
 import org.secomm.tls.protocol.record.HandshakeFragment;
-import org.secomm.tls.protocol.record.HandshakeTypes;
+import org.secomm.tls.protocol.record.HandshakeMessageTypes;
 import org.secomm.tls.protocol.record.RecordLayer;
 import org.secomm.tls.protocol.record.RecordLayerException;
+import org.secomm.tls.protocol.record.ServerCertificate;
 import org.secomm.tls.protocol.record.ServerHello;
 import org.secomm.tls.protocol.record.TlsFragment;
-import org.secomm.tls.protocol.record.TlsHandshake;
+import org.secomm.tls.protocol.record.TlsHandshakeMessage;
 import org.secomm.tls.protocol.record.TlsPlaintextRecord;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.CompletionHandler;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -66,6 +71,8 @@ public class ClientHandshake {
 
     private Throwable reason;
 
+    private List<X509Certificate> serverCertificates;
+
     public ClientHandshake(final ClientConnectionManager connectionManager,
                            final ConnectionState connectionState,
                            final RecordLayer recordLayer) {
@@ -75,6 +82,7 @@ public class ClientHandshake {
         this.executor = Executors.newSingleThreadExecutor();
         this.peerLock = new ReentrantLock();
         this.peerCondition = peerLock.newCondition();
+        this.serverCertificates = new ArrayList<>();
     }
 
     public Future<TlsPeer> doHandshake() {
@@ -141,17 +149,17 @@ public class ClientHandshake {
             TlsFragment fragment = record.getFragment();
             if (fragment.getFragmentType() != FragmentTypes.HANDSHAKE) {
                 reason = new RecordLayerException("Not a handshake fragment");
-                signalComplete();
+                sendFatalAlert(AlertFragment.HANDSHAKE_FAILURE);
             }
-            TlsHandshake handshake = ((HandshakeFragment) fragment).getHandshake();
-            if (handshake.getHandshakeType() != HandshakeTypes.SERVER_HELLO) {
+            TlsHandshakeMessage handshake = ((HandshakeFragment) fragment).getHandshake();
+            if (handshake.getHandshakeType() != HandshakeMessageTypes.SERVER_HELLO) {
                 reason = new RecordLayerException("Not a handshake fragment");
-                signalComplete();
+                sendFatalAlert(AlertFragment.HANDSHAKE_FAILURE);
             }
             evaluateServerHello((ServerHello) handshake);
         } catch (IOException | RecordLayerException e) {
             e.printStackTrace();
-            signalComplete();
+            sendFatalAlert(AlertFragment.HANDSHAKE_FAILURE);
         }
     }
 
@@ -163,10 +171,41 @@ public class ClientHandshake {
         } else {
             try {
                 CipherStateBuilder.setSecurityParameters(securityParameters, serverHello.getCipherSuite());
-            } catch (UnknownCipherSuiteException e) {
+                nextRecord();
+            } catch (UnknownCipherSuiteException | CertificateException | IOException | RecordLayerException e) {
                 sendFatalAlert(AlertFragment.HANDSHAKE_FAILURE);
             }
         }
+    }
+
+    private void nextRecord() throws CertificateException, IOException, RecordLayerException {
+        TlsPlaintextRecord record = recordLayer.readPlaintextRecord(connectionManager);
+        TlsFragment fragment = record.getFragment();
+        if (fragment.getFragmentType() != FragmentTypes.HANDSHAKE) {
+            sendFatalAlert(AlertFragment.HANDSHAKE_FAILURE);
+        }
+        TlsHandshakeMessage handshake = ((HandshakeFragment) fragment).getHandshake();
+        switch (handshake.getHandshakeType()) {
+            case HandshakeMessageTypes.CERTIFICATE:
+                ServerCertificate serverCertificate = (ServerCertificate) handshake;
+                serverCertificates = serverCertificate.getCertificates();
+                nextRecord();
+                break;
+            case HandshakeMessageTypes.SERVER_KEY_EXCHANGE:
+                nextRecord();
+                break;
+            case HandshakeMessageTypes.SERVER_HELLO_DONE:
+                sendClientKeyExchange();
+        }
+    }
+
+    private void sendClientKeyExchange() {
+
+        byte[] clientKeyExchange = recordLayer.getClientKeyExchange();
+    }
+
+    private void setServerCertificateChain(ServerCertificate serverCertificate) {
+
     }
 
     private void sendFatalAlert(byte alertDescription) {

@@ -32,9 +32,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ServerHello implements TlsHandshake {
+public class ServerHello implements TlsHandshakeMessage {
 
-    public static final class Builder implements HandshakeContentFactory.HandshakeBuilder<ServerHello> {
+    public static final class Builder implements HandshakeMessageFactory.HandshakeBuilder<ServerHello> {
         public ServerHello build() {
             return new ServerHello();
         }
@@ -102,7 +102,7 @@ public class ServerHello implements TlsHandshake {
 
     @Override
     public byte getHandshakeType() {
-        return HandshakeTypes.SERVER_HELLO;
+        return HandshakeMessageTypes.SERVER_HELLO;
     }
 
     public byte[] getServerRandom() {

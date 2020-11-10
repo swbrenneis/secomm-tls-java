@@ -31,41 +31,42 @@ import java.util.stream.Stream;
 
 public class CipherStateBuilder {
 
-    private static final Map<Short, SecurityParameters.BulkCipherAlgorithm> cipherAlgorithmMap =
+    private static final Map<Short, String> cipherAlgorithmMap =
             Stream.of(new Object[][] {
-                    { 0x0a, SecurityParameters.BulkCipherAlgorithm.TRIPLEDES },
-                    { 0x39, SecurityParameters.BulkCipherAlgorithm.AES }
-    }).collect(Collectors.toMap(e -> (Short) e[0], e -> (SecurityParameters.BulkCipherAlgorithm) e[1]));
+                    { (short) 0x0a, "TRIPLEDES" },
+                    { (short) 0x39, "AES" }
+    }).collect(Collectors.toMap(e -> (Short) e[0], e -> (String) e[1]));
 
-    private static final Map<Short, SecurityParameters.CipherType> cipherTypeMap = Stream.of( new Object[][] {
-            { 0x0a, SecurityParameters.CipherType.BLOCK },
-            { 0x39, SecurityParameters.CipherType.BLOCK }
-    }).collect(Collectors.toMap(e -> (Short) e[0], e -> (SecurityParameters.CipherType) e[1]));
+    private static final Map<Short, String> cipherTypeMap = Stream.of( new Object[][] {
+            { (short) 0x0a, "BLOCK" },
+            { (short) 0x39, "BLOCK" }
+    }).collect(Collectors.toMap(e -> (Short) e[0], e -> (String) e[1]));
 
-    private static final Map<Short, SecurityParameters.MACAlgorithm> macAlgorithmMap = Stream.of(new Object[][] {
-            { 0x0a, SecurityParameters.MACAlgorithm.HMAC_SHA1 },
-            { 0x39, SecurityParameters.MACAlgorithm.HMAC_SHA1 }
-    }).collect(Collectors.toMap(e -> (Short) e[0], e -> (SecurityParameters.MACAlgorithm) e[1]));
+    private static final Map<Short, String> macAlgorithmMap = Stream.of(new Object[][] {
+            { (short) 0x0a, "HMAC_SHA1" },
+            { (short) 0x39, "HMAC_SHA1" }
+    }).collect(Collectors.toMap(e -> (Short) e[0], e -> (String) e[1]));
 
     private static final Map<Short, Byte> encryptionKeyLengthMap = Stream.of(new Object[][] {
-            { 0x39, 160 },
-            { 0x39, 256 }
-    }).collect(Collectors.toMap(e -> (Short) e[0], e -> (Byte) e[1]));
+            { (short) 0x0a, (byte) 160 },
+            { (short) 0x39, (byte) 256 }
+    }).collect(Collectors.toMap(e -> (short) e[0], e -> (byte) e[1]));
 
     private static final Map<Short, Byte> macLengthMap = Stream.of(new Object[][] {
-            { 0x0a, 160 },
-            { 0x39, 160 }
-    }).collect(Collectors.toMap(e -> (Short) e[0], e -> (Byte) e[1]));
+            { (short) 0x0a, (byte) 160 },
+            { (short) 0x39, (byte) 160 }
+    }).collect(Collectors.toMap(e -> (short) e[0], e -> (byte) e[1]));
 
     public static void setSecurityParameters(SecurityParameters parameters, short cipherSuite)
             throws UnknownCipherSuiteException {
 
-        SecurityParameters.BulkCipherAlgorithm algorithm = cipherAlgorithmMap.get(cipherSuite);
+        String algorithm = cipherAlgorithmMap.get(cipherSuite);
         if (algorithm == null) {
             throw new UnknownCipherSuiteException("Cipher suite " + cipherSuite);
         }
         parameters.setBulkCipherAlgorithm(algorithm);
         parameters.setCipherType(cipherTypeMap.get(cipherSuite));
+
         parameters.setEncryptionKeyLength(encryptionKeyLengthMap.get(cipherSuite));
         parameters.setMacLength(macLengthMap.get(cipherSuite));
     }

@@ -23,18 +23,15 @@
 package org.secomm.tls.protocol.record;
 
 import org.secomm.tls.util.EncodingByteBuffer;
-import org.secomm.tls.util.NumberReaderWriter;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Reader;
 import java.nio.ByteBuffer;
 
 public class GenericAEADCipher implements TlsFragment {
 
-    public static final class Builder implements ContentFactory.FragmentBuilder<GenericAEADCipher> {
+    public static final class Builder implements FragmentFactory.FragmentBuilder<GenericAEADCipher> {
         @Override
-        public GenericAEADCipher build() throws InvalidEncodingException, InvalidHandshakeType {
+        public GenericAEADCipher build() throws InvalidEncodingException, InvalidHandshakeMessageType {
             return new GenericAEADCipher();
         }
     }
@@ -55,7 +52,7 @@ public class GenericAEADCipher implements TlsFragment {
     }
 
     @Override
-    public void decode(EncodingByteBuffer buffer) throws IOException, InvalidHandshakeType, InvalidEncodingException {
+    public void decode(EncodingByteBuffer buffer) throws IOException, InvalidHandshakeMessageType, InvalidEncodingException {
 
     }
 

@@ -28,7 +28,7 @@ import java.io.IOException;
 
 public class ApplicationDataFragment implements TlsFragment {
 
-    public static final class Builder implements ContentFactory.FragmentBuilder<ApplicationDataFragment> {
+    public static final class Builder implements FragmentFactory.FragmentBuilder<ApplicationDataFragment> {
         public ApplicationDataFragment build() {
             return new ApplicationDataFragment();
         }
@@ -44,7 +44,7 @@ public class ApplicationDataFragment implements TlsFragment {
     }
 
     @Override
-    public void decode(EncodingByteBuffer buffer) throws IOException, InvalidHandshakeType, InvalidEncodingException {
+    public void decode(EncodingByteBuffer buffer) throws IOException, InvalidHandshakeMessageType, InvalidEncodingException {
 
     }
 

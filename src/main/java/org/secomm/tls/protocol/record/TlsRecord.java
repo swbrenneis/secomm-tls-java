@@ -22,18 +22,16 @@
 
 package org.secomm.tls.protocol.record;
 
-import org.secomm.tls.protocol.record.TlsFragment;
-
 public abstract class TlsRecord {
 
-    protected byte contentType;
+    protected byte fragmentType;
 
     protected RecordLayer.ProtocolVersion version;
 
     protected TlsFragment fragment;
 
-    protected TlsRecord(byte contentType, RecordLayer.ProtocolVersion version) {
-        this.contentType = contentType;
+    protected TlsRecord(byte fragmentType, RecordLayer.ProtocolVersion version) {
+        this.fragmentType = fragmentType;
         this.version = version;
     }
 
@@ -41,8 +39,8 @@ public abstract class TlsRecord {
 
     }
 
-    public byte getContentType() {
-        return contentType;
+    public byte getFragmentType() {
+        return fragmentType;
     }
 
     public RecordLayer.ProtocolVersion getVersion() {

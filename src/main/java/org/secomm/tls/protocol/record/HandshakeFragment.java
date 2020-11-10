@@ -23,35 +23,30 @@
 package org.secomm.tls.protocol.record;
 
 import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
-import org.secomm.tls.util.ByteBufferUtil;
 import org.secomm.tls.util.EncodingByteBuffer;
-import org.secomm.tls.util.NumberReaderWriter;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 public class HandshakeFragment implements TlsFragment {
 
-    public static final class Builder implements ContentFactory.FragmentBuilder<HandshakeFragment> {
-        public HandshakeFragment build() throws InvalidHandshakeType {
+    public static final class Builder implements FragmentFactory.FragmentBuilder<HandshakeFragment> {
+        public HandshakeFragment build() throws InvalidHandshakeMessageType {
             return new HandshakeFragment();
         }
     }
 
-    private byte handshakeType;
+    private byte messageType;
 
     /**
      * Encoded as a 24 bit integer.
      */
     private int handshakeLength;
 
-    private TlsHandshake body;
+    private TlsHandshakeMessage message;
 
-    public HandshakeFragment(byte handshakeType, TlsHandshake handshake) {
-        this.handshakeType = handshakeType;
-        this.body = handshake;
+    public HandshakeFragment(byte messageType, TlsHandshakeMessage handshake) {
+        this.messageType = messageType;
+        this.message = handshake;
     }
 
     public HandshakeFragment() {
@@ -59,30 +54,30 @@ public class HandshakeFragment implements TlsFragment {
 
     @Override
     public void decode(EncodingByteBuffer handshakeBuffer)
-            throws InvalidHandshakeType, IOException, InvalidExtensionTypeException {
+            throws InvalidHandshakeMessageType, IOException, InvalidExtensionTypeException {
         
-        handshakeType = handshakeBuffer.get();
-        body = HandshakeContentFactory.getHandshake(handshakeType);
+        messageType = handshakeBuffer.get();
+        message = HandshakeMessageFactory.getHandshake(messageType);
         int handshakeLength = handshakeBuffer.get24Bit();
         byte[] bytes = new byte[handshakeLength];
         handshakeBuffer.get(bytes);
         EncodingByteBuffer buffer = EncodingByteBuffer.wrap(bytes);
-        body.decode(buffer);
+        message.decode(buffer);
     }
 
     @Override
     public byte[] encode() {
-        byte[] handshakeBytes = body.encode();
+        byte[] handshakeBytes = message.encode();
         EncodingByteBuffer buffer = EncodingByteBuffer.allocate(handshakeBytes.length + 4);
-        buffer.put(handshakeType);
+        buffer.put(messageType);
         handshakeLength = handshakeBytes.length;
         buffer.put24Bit(handshakeLength);
         buffer.put(handshakeBytes);
         return buffer.toArray();
     }
 
-    public TlsHandshake getHandshake() {
-        return body;
+    public TlsHandshakeMessage getHandshake() {
+        return message;
     }
 
     @Override

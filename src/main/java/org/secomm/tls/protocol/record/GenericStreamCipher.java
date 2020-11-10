@@ -23,20 +23,14 @@
 package org.secomm.tls.protocol.record;
 
 import org.secomm.tls.util.EncodingByteBuffer;
-import org.secomm.tls.util.NumberReaderWriter;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.net.PortUnreachableException;
-import java.nio.ByteBuffer;
 
 public class GenericStreamCipher implements TlsFragment {
 
-    public static final class Builder implements ContentFactory.FragmentBuilder<GenericStreamCipher> {
+    public static final class Builder implements FragmentFactory.FragmentBuilder<GenericStreamCipher> {
         @Override
-        public GenericStreamCipher build() throws InvalidEncodingException, InvalidHandshakeType {
+        public GenericStreamCipher build() throws InvalidEncodingException, InvalidHandshakeMessageType {
             return new GenericStreamCipher();
         }
     }

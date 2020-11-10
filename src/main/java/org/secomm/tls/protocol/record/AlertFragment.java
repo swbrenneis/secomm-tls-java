@@ -25,13 +25,10 @@ package org.secomm.tls.protocol.record;
 import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.nio.ByteBuffer;
 
 public class AlertFragment implements TlsFragment {
 
-    public static final class Builder implements ContentFactory.FragmentBuilder<AlertFragment> {
+    public static final class Builder implements FragmentFactory.FragmentBuilder<AlertFragment> {
         public AlertFragment build() throws InvalidEncodingException {
             return new AlertFragment();
         }

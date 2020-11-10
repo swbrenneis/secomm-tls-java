@@ -25,30 +25,21 @@ package org.secomm.tls.test;
 import org.junit.Assert;
 import org.junit.Test;
 import org.secomm.tls.protocol.record.ClientHello;
-import org.secomm.tls.protocol.record.TlsHandshake;
+import org.secomm.tls.protocol.record.TlsHandshakeMessage;
 import org.secomm.tls.protocol.record.HandshakeFragment;
 import org.secomm.tls.protocol.record.InvalidEncodingException;
-import org.secomm.tls.protocol.record.RecordLayer;
-import org.secomm.tls.protocol.record.TlsFragment;
 import org.secomm.tls.protocol.record.TlsPlaintextRecord;
 import org.secomm.tls.protocol.record.extensions.TlsExtension;
 import org.secomm.tls.protocol.record.extensions.ExtensionFactory;
-import org.secomm.tls.protocol.record.extensions.ServerNameIndication;
 import org.secomm.tls.util.EncodingByteBuffer;
 import org.secomm.tls.util.NumberReaderWriter;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileReader;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.List;
 
 public class ClientHelloTest {
 
@@ -62,8 +53,8 @@ public class ClientHelloTest {
         serverSocket.close();
 
         HandshakeFragment handshakeFragment = record.getFragment();
-        TlsHandshake tlsHandshake = handshakeFragment.getHandshake();
-        Assert.assertTrue(tlsHandshake instanceof ClientHello);
+        TlsHandshakeMessage tlsHandshakeMessage = handshakeFragment.getHandshake();
+        Assert.assertTrue(tlsHandshakeMessage instanceof ClientHello);
     }
 
     @Test

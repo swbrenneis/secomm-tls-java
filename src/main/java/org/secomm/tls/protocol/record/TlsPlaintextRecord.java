@@ -22,12 +22,9 @@
 
 package org.secomm.tls.protocol.record;
 
-import org.apache.commons.io.IOUtils;
 import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.ByteBuffer;
 
 public class TlsPlaintextRecord extends TlsRecord {
 
@@ -41,14 +38,14 @@ public class TlsPlaintextRecord extends TlsRecord {
     public void decode(byte[] recordBytes) throws RecordLayerException, IOException {
 
         EncodingByteBuffer recordBuffer = EncodingByteBuffer.wrap(recordBytes);
-        fragment = ContentFactory.getContent(contentType);
+        fragment = FragmentFactory.getContent(fragmentType);
         fragment.decode(recordBuffer);
     }
 
     public byte[] encode() {
         byte[] fragmentBytes = fragment.encode();
         EncodingByteBuffer buffer = EncodingByteBuffer.allocate(fragmentBytes.length + 5);
-        buffer.put(contentType);
+        buffer.put(fragmentType);
         buffer.put(version.majorVersion);
         buffer.put(version.minorVersion);
         buffer.putShort((short) fragmentBytes.length);

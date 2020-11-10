@@ -23,18 +23,15 @@
 package org.secomm.tls.protocol.record;
 
 import org.secomm.tls.util.EncodingByteBuffer;
-import org.secomm.tls.util.NumberReaderWriter;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Reader;
 import java.nio.ByteBuffer;
 
 public class GenericBlockCipher implements TlsFragment {
 
-    public static final class Builder implements ContentFactory.FragmentBuilder<GenericBlockCipher> {
+    public static final class Builder implements FragmentFactory.FragmentBuilder<GenericBlockCipher> {
         @Override
-        public GenericBlockCipher build() throws InvalidEncodingException, InvalidHandshakeType {
+        public GenericBlockCipher build() throws InvalidEncodingException, InvalidHandshakeMessageType {
             return new GenericBlockCipher();
         }
     }
@@ -65,7 +62,7 @@ public class GenericBlockCipher implements TlsFragment {
     }
 
     @Override
-    public void decode(EncodingByteBuffer buffer) throws IOException, InvalidHandshakeType, InvalidEncodingException {
+    public void decode(EncodingByteBuffer buffer) throws IOException, InvalidHandshakeMessageType, InvalidEncodingException {
 
         // Hmmm
     }

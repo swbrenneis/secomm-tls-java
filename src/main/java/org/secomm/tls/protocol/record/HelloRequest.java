@@ -25,12 +25,10 @@ package org.secomm.tls.protocol.record;
 import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
 
-public class HelloRequest implements TlsHandshake {
+public class HelloRequest implements TlsHandshakeMessage {
 
-    public static final class Builder implements HandshakeContentFactory.HandshakeBuilder<HelloRequest> {
+    public static final class Builder implements HandshakeMessageFactory.HandshakeBuilder<HelloRequest> {
         @Override
         public HelloRequest build() {
             return new HelloRequest();
@@ -51,6 +49,6 @@ public class HelloRequest implements TlsHandshake {
 
     @Override
     public byte getHandshakeType() {
-        return HandshakeTypes.HELLO_REQUEST;
+        return HandshakeMessageTypes.HELLO_REQUEST;
     }
 }

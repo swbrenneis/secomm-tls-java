@@ -90,7 +90,7 @@ public class RecordLayer {
         clientHello.setCipherSuites(currentCipherSuites != null ? currentCipherSuites : CipherSuites.defaultCipherSuites);
         clientHello.setExtensions(currentTlsExtensions != null ? currentTlsExtensions : Extensions.defaultExtensions);
 
-        HandshakeFragment handshakeFragment = new HandshakeFragment(HandshakeTypes.CLIENT_HELLO, clientHello);
+        HandshakeFragment handshakeFragment = new HandshakeFragment(HandshakeMessageTypes.CLIENT_HELLO, clientHello);
         record.setFragment(handshakeFragment);
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -134,25 +134,9 @@ public class RecordLayer {
         }
     }
 
-/*
-    public ServerHello getServerHello(InputStream in) throws IOException, RecordLayerException {
-
-        TlsPlaintextRecord record = readPlaintextRecord(in);
-        TlsFragment fragment = record.getFragment();
-        if (fragment.getFragmentType() != FragmentTypes.HANDSHAKE) {
-            throw new InvalidContentTypeException("Not a handshake fragment");
-        }
-        TlsHandshake handshake = ((HandshakeFragment) fragment).getHandshake();
-        if (handshake.getHandshakeType() != HandshakeTypes.SERVER_HELLO) {
-            throw new InvalidHandshakeType("Not a server hello");
-        }
-        return (ServerHello) handshake;
+    public byte[] getClientKeyExchange() {
+        return new byte[0];
     }
-
-    public List<TlsExtension> getCurrentExtensions() {
-        return currentTlsExtensions;
-    }
-*/
 
     public void setCurrentExtensions(final List<TlsExtension> currentTlsExtensions) {
         this.currentTlsExtensions = currentTlsExtensions;

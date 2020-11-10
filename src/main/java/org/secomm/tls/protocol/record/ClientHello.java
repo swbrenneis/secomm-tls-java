@@ -33,9 +33,9 @@ import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClientHello implements TlsHandshake {
+public class ClientHello implements TlsHandshakeMessage {
 
-    public static final class Builder implements HandshakeContentFactory.HandshakeBuilder<ClientHello> {
+    public static final class Builder implements HandshakeMessageFactory.HandshakeBuilder<ClientHello> {
         public ClientHello build() { return new ClientHello(); }
     }
 
@@ -157,7 +157,7 @@ public class ClientHello implements TlsHandshake {
 
     @Override
     public byte getHandshakeType() {
-        return HandshakeTypes.CLIENT_HELLO;
+        return HandshakeMessageTypes.CLIENT_HELLO;
     }
 
     public void setClientRandom(byte[] clientRandom) {

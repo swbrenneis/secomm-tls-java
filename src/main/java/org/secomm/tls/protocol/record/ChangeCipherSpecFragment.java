@@ -25,13 +25,10 @@ package org.secomm.tls.protocol.record;
 import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.nio.ByteBuffer;
 
 public class ChangeCipherSpecFragment implements TlsFragment {
 
-    public static final class Builder implements ContentFactory.FragmentBuilder<ChangeCipherSpecFragment> {
+    public static final class Builder implements FragmentFactory.FragmentBuilder<ChangeCipherSpecFragment> {
         public ChangeCipherSpecFragment build() throws InvalidEncodingException {
             return new ChangeCipherSpecFragment();
         }

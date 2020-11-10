@@ -31,7 +31,7 @@ public interface TlsFragment {
 
     byte[] encode();
 
-    void decode(EncodingByteBuffer fragmentBuffer) throws IOException, InvalidHandshakeType,
+    void decode(EncodingByteBuffer fragmentBuffer) throws IOException, InvalidHandshakeMessageType,
             InvalidEncodingException, InvalidExtensionTypeException;
 
     byte getFragmentType();
