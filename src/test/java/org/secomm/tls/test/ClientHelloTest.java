@@ -53,7 +53,7 @@ public class ClientHelloTest {
         serverSocket.close();
 
         HandshakeFragment handshakeFragment = record.getFragment();
-        TlsHandshakeMessage tlsHandshakeMessage = handshakeFragment.getHandshake();
+        TlsHandshakeMessage tlsHandshakeMessage = handshakeFragment.getHandshakeMessage();
         Assert.assertTrue(tlsHandshakeMessage instanceof ClientHello);
     }
 

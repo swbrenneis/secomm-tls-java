@@ -27,7 +27,7 @@ import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
 
-public class HandshakeFragment implements TlsFragment {
+public class HandshakeFragment implements TlsHandshakeFragment {
 
     public static final class Builder implements FragmentFactory.FragmentBuilder<HandshakeFragment> {
         public HandshakeFragment build() throws InvalidHandshakeMessageType {
@@ -76,8 +76,8 @@ public class HandshakeFragment implements TlsFragment {
         return buffer.toArray();
     }
 
-    public TlsHandshakeMessage getHandshake() {
-        return message;
+    public <T extends TlsHandshakeMessage> T getHandshakeMessage() {
+        return (T) message;
     }
 
     @Override

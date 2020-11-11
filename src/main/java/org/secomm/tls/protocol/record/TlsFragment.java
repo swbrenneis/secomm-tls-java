@@ -35,4 +35,5 @@ public interface TlsFragment {
             InvalidEncodingException, InvalidExtensionTypeException;
 
     byte getFragmentType();
+
 }

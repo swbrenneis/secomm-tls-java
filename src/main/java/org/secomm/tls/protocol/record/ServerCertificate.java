@@ -27,6 +27,7 @@ import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -76,14 +77,17 @@ public class ServerCertificate implements TlsHandshakeMessage {
         return HandshakeMessageTypes.CERTIFICATE;
     }
 
-    public List<X509Certificate> getCertificates() throws CertificateException {
-        List<X509Certificate> result = new ArrayList<>();
+    /**
+     * Decode and return the certificate at the given index. May throw index out of
+     * bounds exception.
+     *
+     * @param index
+     * @return
+     * @throws CertificateException
+     */
+    public X509Certificate getCertificate(int index) throws CertificateException {
         CertificateFactory factory = CertificateFactory.getInstance("X.509");
-        for (byte[] certBytes : certificateChain) {
-            ByteArrayInputStream in = new ByteArrayInputStream(certBytes);
-            X509Certificate certificate = (X509Certificate) factory.generateCertificate(in);
-            result.add(certificate);
-        }
-        return result;
+        ByteArrayInputStream in = new ByteArrayInputStream(certificateChain.get(index));
+        return (X509Certificate) factory.generateCertificate(in);
     }
 }

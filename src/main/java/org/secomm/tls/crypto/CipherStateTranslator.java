@@ -29,7 +29,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class CipherStateBuilder {
+public class CipherStateTranslator {
+
+    public enum KeyExchangeAlgorithms { DH_ANON, DHE_RSA, DHE_DSS, RSA, HD_RSA, DH_DSS;
+
+    }
 
     private static final Map<Short, String> cipherAlgorithmMap =
             Stream.of(new Object[][] {
@@ -45,6 +49,11 @@ public class CipherStateBuilder {
     private static final Map<Short, String> macAlgorithmMap = Stream.of(new Object[][] {
             { (short) 0x0a, "HMAC_SHA1" },
             { (short) 0x39, "HMAC_SHA1" }
+    }).collect(Collectors.toMap(e -> (Short) e[0], e -> (String) e[1]));
+
+    private static final Map<Short, String> keyExchangeAlgorithmMap = Stream.of(new Object[][] {
+            { (short) 0x0a, KeyExchangeAlgorithms.DH_ANON.toString() },
+            { (short) 0x39, KeyExchangeAlgorithms.DHE_RSA.toString() }
     }).collect(Collectors.toMap(e -> (Short) e[0], e -> (String) e[1]));
 
     private static final Map<Short, Byte> encryptionKeyLengthMap = Stream.of(new Object[][] {
@@ -69,5 +78,21 @@ public class CipherStateBuilder {
 
         parameters.setEncryptionKeyLength(encryptionKeyLengthMap.get(cipherSuite));
         parameters.setMacLength(macLengthMap.get(cipherSuite));
+    }
+
+    /**
+     * This really stupid function gets around the fact that you
+     * can't have a map of enums in Java
+     *
+     * @param cipherSuite
+     * @return
+     */
+    public static KeyExchangeAlgorithms getKeyExchangeAlgorithm(short cipherSuite) {
+        String algorithm = keyExchangeAlgorithmMap.get(cipherSuite);
+        if (algorithm != null) {
+            return KeyExchangeAlgorithms.valueOf(algorithm);
+        } else {
+            return null;
+        }
     }
 }

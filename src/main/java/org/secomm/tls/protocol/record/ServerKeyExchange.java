@@ -32,7 +32,7 @@ public class ServerKeyExchange implements TlsHandshakeMessage {
         }
     }
 
-    private static final class ServerDHParameters {
+    public static final class ServerDHParameters {
         public byte[] dh_p;
         public byte[] dh_g;
         public byte[] dh_Ys;
@@ -45,9 +45,11 @@ public class ServerKeyExchange implements TlsHandshakeMessage {
 
     private ServerDHParameters serverDHParameters;
 
-    private short signatureHashAlgorithm;
+    private byte hashAlgorithm;
 
-    private byte[] paramSignatureHash;
+    private byte signatureAlgorithm;
+
+    private byte[] parametersSignatureHash;
 
     @Override
     public byte[] encode() {
@@ -59,9 +61,10 @@ public class ServerKeyExchange implements TlsHandshakeMessage {
             buffer.put(serverDHParameters.dh_g);
             buffer.putShort((short) serverDHParameters.dh_Ys.length);
             buffer.put(serverDHParameters.dh_Ys);
-            if (paramSignatureHash != null) {
-                buffer.putShort((short) signatureHashAlgorithm);
-                buffer.put(paramSignatureHash);
+            if (parametersSignatureHash != null) {
+                buffer.put(hashAlgorithm);
+                buffer.put(signatureAlgorithm);
+                buffer.put(parametersSignatureHash);
             }
             return buffer.toArray();
         } else {
@@ -87,9 +90,11 @@ public class ServerKeyExchange implements TlsHandshakeMessage {
             handshakeBuffer.get(dh_Ys);
             serverDHParameters = new ServerDHParameters(dh_p, dh_g, dh_Ys);
             if (handshakeBuffer.hasRemaining()) {
-                signatureHashAlgorithm = handshakeBuffer.getShort();
-                paramSignatureHash = new byte[256];         // Constant for all DH and DHE hashes
-                handshakeBuffer.get(paramSignatureHash);
+                hashAlgorithm = handshakeBuffer.get();
+                signatureAlgorithm = handshakeBuffer.get();
+                short hashLength = handshakeBuffer.getShort();
+                parametersSignatureHash = new byte[hashLength];         // Constant for all DH and DHE hashes
+                handshakeBuffer.get(parametersSignatureHash);
             }
         }
     }
@@ -97,5 +102,21 @@ public class ServerKeyExchange implements TlsHandshakeMessage {
     @Override
     public byte getHandshakeType() {
         return HandshakeMessageTypes.SERVER_KEY_EXCHANGE;
+    }
+
+    public ServerDHParameters getServerDHParameters() {
+        return serverDHParameters;
+    }
+
+    public byte[] getParametersSignatureHash() {
+        return parametersSignatureHash;
+    }
+
+    public byte getHashAlgorithm() {
+        return hashAlgorithm;
+    }
+
+    public byte getSignatureAlgorithm() {
+        return signatureAlgorithm;
     }
 }

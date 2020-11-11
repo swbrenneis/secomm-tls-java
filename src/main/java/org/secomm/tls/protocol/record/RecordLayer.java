@@ -78,7 +78,7 @@ public class RecordLayer {
         this.pendingCipherSpec = connectionState.getSecurityParameters();
     }
 
-    public byte[] getClientHello() throws IOException {
+    public TlsPlaintextRecord getClientHello() throws IOException {
 
         TlsPlaintextRecord record = new TlsPlaintextRecord(FragmentTypes.HANDSHAKE, version);
 
@@ -93,8 +93,7 @@ public class RecordLayer {
         HandshakeFragment handshakeFragment = new HandshakeFragment(HandshakeMessageTypes.CLIENT_HELLO, clientHello);
         record.setFragment(handshakeFragment);
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        return record.encode();
+        return record;
     }
 
     public byte[] getAlert(byte alertLevel, byte alertDescription) {
@@ -134,8 +133,17 @@ public class RecordLayer {
         }
     }
 
-    public byte[] getClientKeyExchange() {
-        return new byte[0];
+    public TlsPlaintextRecord getClientKeyExchange() {
+
+        TlsPlaintextRecord record = new TlsPlaintextRecord(FragmentTypes.HANDSHAKE, version);
+
+        ClientKeyExchange clientKeyExchange = new ClientKeyExchange();
+
+        HandshakeFragment handshakeFragment =
+                new HandshakeFragment(HandshakeMessageTypes.CLIENT_KEY_EXCHANGE, clientKeyExchange);
+        record.setFragment(handshakeFragment);
+
+        return record;
     }
 
     public void setCurrentExtensions(final List<TlsExtension> currentTlsExtensions) {

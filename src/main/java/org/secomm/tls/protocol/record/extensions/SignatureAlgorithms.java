@@ -41,23 +41,6 @@ public class SignatureAlgorithms extends AbstractTlsExtension {
         }
     }
 
-    private Map<Byte, String> hashNames = Stream.of(new Object[][]{
-            { (byte) 0, "none"},
-            { (byte) 1, "MD5" },
-            { (byte) 2, "SHA1" },
-            { (byte) 3, "SHA224" },
-            { (byte) 4, "SHA256" },
-            { (byte) 5, "SH3284" },
-            { (byte) 6, "SHA256"}
-    }).collect(Collectors.toMap(e -> (Byte) e[0], e -> (String) e[1]));
-
-    private Map<Byte, String> signatureNames = Stream.of(new Object[][]{
-            { (byte) 0, "anonymous" },
-            { (byte) 1, "RSA" },
-            { (byte) 2, "DSA" },
-            { (byte) 3, "ECDSA" }
-    }).collect(Collectors.toMap(e -> (Byte) e[0], e -> (String) e[1]));
-
     public static final class Algorithms {
         public byte hash;
         public byte signature;
@@ -103,6 +86,7 @@ public class SignatureAlgorithms extends AbstractTlsExtension {
 
     @Override
     public String getText() throws InvalidEncodingException {
+/*
         String result = "Signature Algorithms\n";
         for (Algorithms algorithms : algorithmsList) {
             String hash = hashNames.get(algorithms.hash);
@@ -115,7 +99,8 @@ public class SignatureAlgorithms extends AbstractTlsExtension {
             }
             result += "\tHash: " + hash + ", Signature: " + signature + "\n";
         }
-        return result;
+*/
+        return "";
     }
 
 }

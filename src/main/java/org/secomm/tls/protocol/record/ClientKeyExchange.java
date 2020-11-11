@@ -26,6 +26,7 @@ import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
 import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
+import java.security.InvalidParameterException;
 
 public class ClientKeyExchange implements TlsHandshakeMessage {
 
@@ -34,6 +35,13 @@ public class ClientKeyExchange implements TlsHandshakeMessage {
             return new ClientKeyExchange();
         }
     }
+
+    public static final class PremasterSecret {
+        public short version;
+        public byte[] random;
+    }
+
+    private PremasterSecret premasterSecret;
 
     @Override
     public byte[] encode() {
@@ -48,5 +56,15 @@ public class ClientKeyExchange implements TlsHandshakeMessage {
     @Override
     public byte getHandshakeType() {
         return HandshakeMessageTypes.CLIENT_KEY_EXCHANGE;
+    }
+
+    public void setPremasterSecret(PremasterSecret premasterSecret) {
+        if (premasterSecret.version == 0) {
+            throw new InvalidParameterException("Premaster secret version must be non-zero");
+        }
+        if (premasterSecret.random.length != 46) {
+            throw new InvalidParameterException("Invalid premaster secret random value");
+        }
+        this.premasterSecret = premasterSecret;
     }
 }

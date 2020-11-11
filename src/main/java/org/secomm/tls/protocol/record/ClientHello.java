@@ -160,6 +160,10 @@ public class ClientHello implements TlsHandshakeMessage {
         return HandshakeMessageTypes.CLIENT_HELLO;
     }
 
+    public byte[] getClientRandom() {
+        return clientRandom;
+    }
+
     public void setClientRandom(byte[] clientRandom) {
         if (clientRandom.length != CLIENT_RANDOM_LENGTH) {
             throw new InvalidParameterException("Invalid client random size");
