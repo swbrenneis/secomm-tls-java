@@ -20,10 +20,34 @@
  *
  */
 
-package org.secomm.tls.protocol.record;
+package org.secomm.tls.protocol.record.handshake;
 
-public class InvalidHandshakeMessageType extends RecordLayerException {
-    public InvalidHandshakeMessageType(String message) {
-        super(message);
+import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
+import org.secomm.tls.util.EncodingByteBuffer;
+
+import java.io.IOException;
+
+public class ServerHelloDone implements TlsHandshakeMessage {
+
+    public static final class Builder implements HandshakeMessageFactory.HandshakeBuilder<ServerHelloDone> {
+        public ServerHelloDone build() {
+            return new ServerHelloDone();
+        }
+    }
+    
+    @Override
+    public byte[] encode() {
+        return new byte[0];
+    }
+
+    @Override
+    public void decode(EncodingByteBuffer handshakeBuffer) throws IOException, InvalidExtensionTypeException {
+
+    }
+
+    @Override
+    public byte getHandshakeType() {
+        return HandshakeMessageTypes.SERVER_HELLO_DONE;
     }
 }
+

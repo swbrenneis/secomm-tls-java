@@ -20,7 +20,7 @@
  *
  */
 
-package org.secomm.tls.protocol.record;
+package org.secomm.tls.protocol.record.handshake;
 
 import java.util.Map;
 import java.util.stream.Collectors;

@@ -20,26 +20,35 @@
  *
  */
 
-package org.secomm.tls.protocol.record;
+package org.secomm.tls.protocol.record.handshake;
 
-import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
 import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
 
-public class Finished implements TlsHandshakeMessage {
+public class HelloRequest implements TlsHandshakeMessage {
+
+    public static final class Builder implements HandshakeMessageFactory.HandshakeBuilder<HelloRequest> {
+        @Override
+        public HelloRequest build() {
+            return new HelloRequest();
+        }
+    }
+
+    public HelloRequest() {
+    }
+
+    @Override
+    public void decode(EncodingByteBuffer buffer) throws IOException {
+    }
+
     @Override
     public byte[] encode() {
         return new byte[0];
     }
 
     @Override
-    public void decode(EncodingByteBuffer handshakeBuffer) throws IOException, InvalidExtensionTypeException {
-
-    }
-
-    @Override
     public byte getHandshakeType() {
-        return 0;
+        return HandshakeMessageTypes.HELLO_REQUEST;
     }
 }

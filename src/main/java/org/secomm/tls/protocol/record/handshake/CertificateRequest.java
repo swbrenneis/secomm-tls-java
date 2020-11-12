@@ -20,18 +20,26 @@
  *
  */
 
-package org.secomm.tls.protocol.record;
+package org.secomm.tls.protocol.record.handshake;
 
-public class HandshakeMessageTypes {
+import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
+import org.secomm.tls.util.EncodingByteBuffer;
 
-    public static final byte HELLO_REQUEST = 0;
-    public static final byte CLIENT_HELLO = 1;
-    public static final byte SERVER_HELLO = 2;
-    public static final byte CERTIFICATE = 11;
-    public static final byte SERVER_KEY_EXCHANGE  = 12;
-    public static final byte CERTIFICATE_REQUEST = 13;
-    public static final byte SERVER_HELLO_DONE = 14;
-    public static final byte CERTIFICATE_VERIFY = 15;
-    public static final byte CLIENT_KEY_EXCHANGE = 16;
-    public static final byte FINISHED = 20;
+import java.io.IOException;
+
+public class CertificateRequest implements TlsHandshakeMessage {
+    @Override
+    public byte[] encode() {
+        return new byte[0];
+    }
+
+    @Override
+    public void decode(EncodingByteBuffer handshakeBuffer) throws IOException, InvalidExtensionTypeException {
+
+    }
+
+    @Override
+    public byte getHandshakeType() {
+        return 0;
+    }
 }

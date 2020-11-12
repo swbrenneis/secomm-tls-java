@@ -20,35 +20,12 @@
  *
  */
 
-package org.secomm.tls.protocol.record;
+package org.secomm.tls.protocol.record.handshake;
 
-import org.secomm.tls.util.EncodingByteBuffer;
+import org.secomm.tls.protocol.record.RecordLayerException;
 
-import java.io.IOException;
-
-public class HelloRequest implements TlsHandshakeMessage {
-
-    public static final class Builder implements HandshakeMessageFactory.HandshakeBuilder<HelloRequest> {
-        @Override
-        public HelloRequest build() {
-            return new HelloRequest();
-        }
-    }
-
-    public HelloRequest() {
-    }
-
-    @Override
-    public void decode(EncodingByteBuffer buffer) throws IOException {
-    }
-
-    @Override
-    public byte[] encode() {
-        return new byte[0];
-    }
-
-    @Override
-    public byte getHandshakeType() {
-        return HandshakeMessageTypes.HELLO_REQUEST;
+public class InvalidHandshakeMessageType extends RecordLayerException {
+    public InvalidHandshakeMessageType(String message) {
+        super(message);
     }
 }

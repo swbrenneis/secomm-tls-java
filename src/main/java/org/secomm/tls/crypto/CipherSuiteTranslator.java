@@ -22,6 +22,7 @@
 
 package org.secomm.tls.crypto;
 
+import org.bouncycastle.jcajce.provider.asymmetric.RSA;
 import org.secomm.tls.protocol.SecurityParameters;
 import org.secomm.tls.protocol.UnknownCipherSuiteException;
 
@@ -29,11 +30,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class CipherStateTranslator {
+public class CipherSuiteTranslator {
 
-    public enum KeyExchangeAlgorithms { DH_ANON, DHE_RSA, DHE_DSS, RSA, HD_RSA, DH_DSS;
+    public enum KeyExchangeAlgorithms { DH_ANON, DHE_RSA, DHE_DSS, RSA, DH_RSA, DH_DSS }
 
-    }
+    private static short currentCipherSuite;
+
+    private static KeyExchangeAlgorithms currentKeyExchangeAlgorithm;
 
     private static final Map<Short, String> cipherAlgorithmMap =
             Stream.of(new Object[][] {
@@ -69,6 +72,8 @@ public class CipherStateTranslator {
     public static void setSecurityParameters(SecurityParameters parameters, short cipherSuite)
             throws UnknownCipherSuiteException {
 
+        currentCipherSuite = cipherSuite;
+
         String algorithm = cipherAlgorithmMap.get(cipherSuite);
         if (algorithm == null) {
             throw new UnknownCipherSuiteException("Cipher suite " + cipherSuite);
@@ -78,6 +83,8 @@ public class CipherStateTranslator {
 
         parameters.setEncryptionKeyLength(encryptionKeyLengthMap.get(cipherSuite));
         parameters.setMacLength(macLengthMap.get(cipherSuite));
+
+        currentKeyExchangeAlgorithm = getKeyExchangeAlgorithm(cipherSuite);
     }
 
     /**
@@ -94,5 +101,9 @@ public class CipherStateTranslator {
         } else {
             return null;
         }
+    }
+
+    public static KeyExchangeAlgorithms getCurrentKeyExchangeAlgorithm() {
+        return currentKeyExchangeAlgorithm;
     }
 }

@@ -20,29 +20,14 @@
  *
  */
 
-package org.secomm.tls.protocol.record;
+package org.secomm.tls.protocol.record.handshake;
 
 import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
 import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
-import java.security.InvalidParameterException;
 
-public class ClientKeyExchange implements TlsHandshakeMessage {
-
-    public static final class Builder implements HandshakeMessageFactory.HandshakeBuilder<ClientKeyExchange> {
-        public ClientKeyExchange build() {
-            return new ClientKeyExchange();
-        }
-    }
-
-    public static final class PremasterSecret {
-        public short version;
-        public byte[] random;
-    }
-
-    private PremasterSecret premasterSecret;
-
+public class Finished implements TlsHandshakeMessage {
     @Override
     public byte[] encode() {
         return new byte[0];
@@ -55,16 +40,6 @@ public class ClientKeyExchange implements TlsHandshakeMessage {
 
     @Override
     public byte getHandshakeType() {
-        return HandshakeMessageTypes.CLIENT_KEY_EXCHANGE;
-    }
-
-    public void setPremasterSecret(PremasterSecret premasterSecret) {
-        if (premasterSecret.version == 0) {
-            throw new InvalidParameterException("Premaster secret version must be non-zero");
-        }
-        if (premasterSecret.random.length != 46) {
-            throw new InvalidParameterException("Invalid premaster secret random value");
-        }
-        this.premasterSecret = premasterSecret;
+        return 0;
     }
 }

@@ -20,34 +20,56 @@
  *
  */
 
-package org.secomm.tls.protocol.record;
+package org.secomm.tls.protocol.record.handshake;
 
+import org.secomm.tls.crypto.CipherSuiteTranslator;
 import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
 import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
+import java.security.InvalidParameterException;
 
-public class ServerHelloDone implements TlsHandshakeMessage {
+public class ClientKeyExchange implements TlsHandshakeMessage {
 
-    public static final class Builder implements HandshakeMessageFactory.HandshakeBuilder<ServerHelloDone> {
-        public ServerHelloDone build() {
-            return new ServerHelloDone();
+    public static final class Builder implements HandshakeMessageFactory.HandshakeBuilder<ClientKeyExchange> {
+        public ClientKeyExchange build() {
+            return new ClientKeyExchange();
         }
     }
-    
+
+    public ClientKeyExchange() {
+    }
+
+    public ClientKeyExchange(byte[] rsaEncryptedSecret) {
+        this.rsaEncryptedSecret = rsaEncryptedSecret;
+    }
+
+    private byte[] rsaEncryptedSecret;
+
     @Override
     public byte[] encode() {
-        return new byte[0];
+        EncodingByteBuffer buffer = EncodingByteBuffer.allocate(1024);
+        if (CipherSuiteTranslator.getCurrentKeyExchangeAlgorithm() == CipherSuiteTranslator.KeyExchangeAlgorithms.RSA) {
+            buffer.putShort((short) rsaEncryptedSecret.length);
+            buffer.put(rsaEncryptedSecret);
+        } else {
+        }
+        return buffer.toArray();
     }
 
     @Override
     public void decode(EncodingByteBuffer handshakeBuffer) throws IOException, InvalidExtensionTypeException {
-
+        if (CipherSuiteTranslator.getCurrentKeyExchangeAlgorithm() == CipherSuiteTranslator.KeyExchangeAlgorithms.RSA) {
+            short secretLength = handshakeBuffer.getShort();
+            rsaEncryptedSecret = new byte[secretLength];
+            handshakeBuffer.get(rsaEncryptedSecret);
+        } else {
+        }
     }
 
     @Override
     public byte getHandshakeType() {
-        return HandshakeMessageTypes.SERVER_HELLO_DONE;
+        return HandshakeMessageTypes.CLIENT_KEY_EXCHANGE;
     }
-}
 
+}

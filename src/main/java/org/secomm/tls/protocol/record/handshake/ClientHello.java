@@ -20,8 +20,9 @@
  *
  */
 
-package org.secomm.tls.protocol.record;
+package org.secomm.tls.protocol.record.handshake;
 
+import org.secomm.tls.protocol.record.RecordLayer;
 import org.secomm.tls.protocol.record.extensions.KeyShare;
 import org.secomm.tls.protocol.record.extensions.TlsExtension;
 import org.secomm.tls.protocol.record.extensions.ExtensionFactory;
