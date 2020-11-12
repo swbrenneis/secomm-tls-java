@@ -29,6 +29,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 public class ClientConnectionManager implements ConnectionManager {
@@ -49,6 +50,18 @@ public class ClientConnectionManager implements ConnectionManager {
     public void connect(CompletionHandler<Void, ClientConnectionManager> connectHandler) throws IOException {
         channel = AsynchronousSocketChannel.open();
         channel.connect(new InetSocketAddress(address, port), this, connectHandler);
+    }
+
+    public boolean connect() throws IOException {
+        channel = AsynchronousSocketChannel.open();
+        Future<Void> future = channel.connect(new InetSocketAddress(address, port));
+        try {
+            future.get();
+            return channel.isOpen();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     @Override

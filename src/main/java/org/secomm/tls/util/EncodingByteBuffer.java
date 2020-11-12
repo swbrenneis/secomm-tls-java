@@ -145,6 +145,10 @@ public class EncodingByteBuffer {
         buffer[position++] = (byte) (i24 & 0xff);
     }
 
+    public void reset() {
+        position = 0;
+    }
+
     public byte[] toArray() {
         return Arrays.copyOf(buffer, position);
     }

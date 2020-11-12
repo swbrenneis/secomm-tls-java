@@ -26,12 +26,18 @@ import org.secomm.tls.net.ConnectionManager;
 import org.secomm.tls.protocol.CipherSuites;
 import org.secomm.tls.protocol.ConnectionState;
 import org.secomm.tls.protocol.SecurityParameters;
+import org.secomm.tls.protocol.TlsConstants;
 import org.secomm.tls.protocol.record.extensions.Extensions;
 import org.secomm.tls.protocol.record.extensions.TlsExtension;
+import org.secomm.tls.protocol.record.handshake.ClientHello;
+import org.secomm.tls.protocol.record.handshake.ClientKeyExchange;
+import org.secomm.tls.protocol.record.handshake.HandshakeMessageTypes;
+import org.secomm.tls.protocol.record.handshake.TlsHandshakeFragment;
+import org.secomm.tls.protocol.record.handshake.TlsHandshakeMessage;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.CompletionHandler;
 import java.rmi.RemoteException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -60,6 +66,8 @@ public class RecordLayer {
 
     private final ProtocolVersion version;
 
+    private final ConnectionManager connectionManager;
+
     private ConnectionState connectionState;
 
     private SecurityParameters pendingCipherSpec;
@@ -72,12 +80,56 @@ public class RecordLayer {
 
     private List<TlsExtension> currentTlsExtensions;
 
-    public RecordLayer(ProtocolVersion version, ConnectionState connectionState) {
+    public RecordLayer(final ProtocolVersion version,
+                       final ConnectionState connectionState,
+                       final ConnectionManager connectionManager) {
         this.version = version;
         this.connectionState = connectionState;
         this.pendingCipherSpec = connectionState.getSecurityParameters();
+        this.connectionManager = connectionManager;
     }
 
+    public void sendHandshakeRecord(TlsHandshakeMessage handshakeMessage) {
+
+        TlsPlaintextRecord record = new TlsPlaintextRecord(TlsConstants.HANDSHAKE, version);
+        TlsHandshakeFragment fragment = new HandshakeFragment(handshakeMessage);
+        record.setFragment(fragment);
+        byte[] encoded = record.encode();
+        ByteBuffer buffer = ByteBuffer.wrap(encoded);
+        connectionManager.write(buffer, new CompletionHandler<Integer, ConnectionManager>() {
+            @Override
+            public void completed(Integer result, ConnectionManager attachment) {
+
+            }
+
+            @Override
+            public void failed(Throwable exc, ConnectionManager attachment) {
+                // TODO handle sending errors back to handshake engine. Callback?
+                connectionManager.close();
+            }
+        });
+    }
+
+    public void sendAlertRecord(AlertFragment alertFragment) {
+        TlsPlaintextRecord record = new TlsPlaintextRecord(TlsConstants.ALERT, version);
+        record.setFragment(alertFragment);
+        byte[] encoded = record.encode();
+        ByteBuffer buffer = ByteBuffer.wrap(encoded);
+        connectionManager.write(buffer, new CompletionHandler<Integer, ConnectionManager>() {
+            @Override
+            public void completed(Integer result, ConnectionManager attachment) {
+
+            }
+
+            @Override
+            public void failed(Throwable exc, ConnectionManager attachment) {
+                // TODO handle sending errors back to handshake engine. Callback?
+                connectionManager.close();
+            }
+        });
+    }
+
+/*
     public TlsPlaintextRecord getClientHello() throws IOException {
 
         TlsPlaintextRecord record = new TlsPlaintextRecord(FragmentTypes.HANDSHAKE, version);
@@ -90,7 +142,7 @@ public class RecordLayer {
         clientHello.setCipherSuites(currentCipherSuites != null ? currentCipherSuites : CipherSuites.defaultCipherSuites);
         clientHello.setExtensions(currentTlsExtensions != null ? currentTlsExtensions : Extensions.defaultExtensions);
 
-        HandshakeFragment handshakeFragment = new HandshakeFragment(HandshakeMessageTypes.CLIENT_HELLO, clientHello);
+        HandshakeFragment handshakeFragment = new HandshakeFragment(clientHello);
         record.setFragment(handshakeFragment);
 
         return record;
@@ -99,8 +151,9 @@ public class RecordLayer {
     public byte[] getAlert(byte alertLevel, byte alertDescription) {
         return new byte[0];
     }
+*/
 
-    public TlsPlaintextRecord readPlaintextRecord(ConnectionManager connectionManager)
+    public TlsPlaintextRecord readPlaintextRecord()
             throws IOException, RecordLayerException {
 
         ByteBuffer buffer = ByteBuffer.allocate(5);
@@ -133,6 +186,7 @@ public class RecordLayer {
         }
     }
 
+/*
     public TlsPlaintextRecord getClientKeyExchange() {
 
         TlsPlaintextRecord record = new TlsPlaintextRecord(FragmentTypes.HANDSHAKE, version);
@@ -140,7 +194,7 @@ public class RecordLayer {
         ClientKeyExchange clientKeyExchange = new ClientKeyExchange();
 
         HandshakeFragment handshakeFragment =
-                new HandshakeFragment(HandshakeMessageTypes.CLIENT_KEY_EXCHANGE, clientKeyExchange);
+                new HandshakeFragment(clientKeyExchange);
         record.setFragment(handshakeFragment);
 
         return record;
@@ -157,4 +211,5 @@ public class RecordLayer {
     public void setCurrentCipherSuites(List<Short> cipherSuites) {
         currentCipherSuites = cipherSuites;
     }
+*/
 }

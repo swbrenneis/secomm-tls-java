@@ -32,8 +32,10 @@ public class TlsPlaintextRecord extends TlsRecord {
         super(contentType, version);
     }
 
+/*
     public TlsPlaintextRecord() {
     }
+*/
 
     public void decode(byte[] recordBytes) throws RecordLayerException, IOException {
 

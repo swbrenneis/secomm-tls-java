@@ -31,27 +31,30 @@ import org.secomm.tls.protocol.record.extensions.TlsExtension;
 
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 public class TlsClientContext extends TlsContext {
 
     private final SecureRandom random;
 
-    private final RecordLayer recordLayer;
-
     private final ConnectionState connectionState;
 
     private final SecurityParameters securityParameters;
 
-    private ClientConnectionManager connectionManager;
+    private List<TlsExtension> extensions;
+
+    private List<Short> cipherSuites;
+
+    private TlsPeer peer;
 
     TlsClientContext(final SecureRandom random) {
         this.random = random;
         this.securityParameters = new SecurityParameters(SecurityParameters.ConnectionEnd.CLIENT, random);
         this.connectionState = new ConnectionState(securityParameters);
-        this.recordLayer = new RecordLayer(RecordLayer.TLS_1_2, connectionState);
+        // Created here to be available if there are no extensions or cipherSuites (unlikely)
+        extensions = new ArrayList<>();
+        cipherSuites = new ArrayList<>();
     }
 
     /**
@@ -62,7 +65,8 @@ public class TlsClientContext extends TlsContext {
      * @throws IOException
      */
     public TlsPeer connect(String address) throws IOException {
-        return connect(address, 443);
+        connect(address, 443);
+        return peer;
     }
 
     /**
@@ -73,23 +77,25 @@ public class TlsClientContext extends TlsContext {
      * @throws IOException
      */
     public TlsPeer connect(String address, int port) throws IOException {
-        connectionManager = new ClientConnectionManager(address, port);
-        ClientHandshake handshake = new ClientHandshake(connectionManager, connectionState, recordLayer);
-        Future<TlsPeer> future = handshake.doHandshake();
-        try {
-            return future.get();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+        ClientConnectionManager connectionManager = new ClientConnectionManager(address, port);
+        RecordLayer recordLayer = new RecordLayer(RecordLayer.TLS_1_2, connectionState, connectionManager);
+        boolean isOpen = connectionManager.connect();
+        if (isOpen) {
+            ClientHandshake clientHandshake = new ClientHandshake(connectionState, recordLayer, random);
+            clientHandshake.setCipherSuites(cipherSuites);
+            clientHandshake.setExtensions(extensions);
+            return clientHandshake.doHandshake();
+        } else {
             return null;
         }
     }
 
     public void setCipherSuites(List<Short> cipherSuites) {
-        recordLayer.setCurrentCipherSuites(cipherSuites);
+        this.cipherSuites = cipherSuites;
     }
 
     public void setExtensions(List<TlsExtension> extensions) {
-        recordLayer.setCurrentExtensions(extensions);
+        this.extensions = extensions;
     }
 
 }

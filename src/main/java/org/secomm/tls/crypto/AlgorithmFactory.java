@@ -22,10 +22,7 @@
 
 package org.secomm.tls.crypto;
 
-import java.security.InvalidParameterException;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import org.secomm.tls.crypto.prf.PRFAlgorithm;
 
 public class AlgorithmFactory {
 

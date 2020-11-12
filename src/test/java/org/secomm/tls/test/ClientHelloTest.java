@@ -24,8 +24,10 @@ package org.secomm.tls.test;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.secomm.tls.protocol.record.ClientHello;
-import org.secomm.tls.protocol.record.TlsHandshakeMessage;
+import org.secomm.tls.protocol.TlsConstants;
+import org.secomm.tls.protocol.record.RecordLayer;
+import org.secomm.tls.protocol.record.handshake.ClientHello;
+import org.secomm.tls.protocol.record.handshake.TlsHandshakeMessage;
 import org.secomm.tls.protocol.record.HandshakeFragment;
 import org.secomm.tls.protocol.record.InvalidEncodingException;
 import org.secomm.tls.protocol.record.TlsPlaintextRecord;
@@ -48,7 +50,8 @@ public class ClientHelloTest {
 
         ServerSocket serverSocket = new ServerSocket(8443);
         Socket clientSocket = serverSocket.accept();
-        TlsPlaintextRecord record = new TlsPlaintextRecord();
+        TlsPlaintextRecord record = new TlsPlaintextRecord(TlsConstants.HANDSHAKE,
+                new RecordLayer.ProtocolVersion((byte) 0x03, (byte) 0x01));
 //        record.decode(clientSocket.getInputStream());
         serverSocket.close();
 

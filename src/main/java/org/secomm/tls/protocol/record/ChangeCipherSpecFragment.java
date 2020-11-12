@@ -22,6 +22,7 @@
 
 package org.secomm.tls.protocol.record;
 
+import org.secomm.tls.protocol.TlsConstants;
 import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
@@ -51,7 +52,7 @@ public class ChangeCipherSpecFragment implements TlsFragment {
 
     @Override
     public byte getFragmentType() {
-        return FragmentTypes.CHANGE_CIPHER_SPEC;
+        return TlsConstants.CHANGE_CIPHER_SPEC;
     }
 
     @Override

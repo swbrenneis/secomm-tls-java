@@ -22,7 +22,12 @@
 
 package org.secomm.tls.protocol.record;
 
+import org.secomm.tls.protocol.TlsConstants;
 import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
+import org.secomm.tls.protocol.record.handshake.HandshakeMessageFactory;
+import org.secomm.tls.protocol.record.handshake.InvalidHandshakeMessageType;
+import org.secomm.tls.protocol.record.handshake.TlsHandshakeFragment;
+import org.secomm.tls.protocol.record.handshake.TlsHandshakeMessage;
 import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
@@ -44,9 +49,9 @@ public class HandshakeFragment implements TlsHandshakeFragment {
 
     private TlsHandshakeMessage message;
 
-    public HandshakeFragment(byte messageType, TlsHandshakeMessage handshake) {
-        this.messageType = messageType;
+    public HandshakeFragment(TlsHandshakeMessage handshake) {
         this.message = handshake;
+        this.messageType = handshake.getHandshakeType();
     }
 
     public HandshakeFragment() {
@@ -82,6 +87,6 @@ public class HandshakeFragment implements TlsHandshakeFragment {
 
     @Override
     public byte getFragmentType() {
-        return FragmentTypes.HANDSHAKE;
+        return TlsConstants.HANDSHAKE;
     }
 }

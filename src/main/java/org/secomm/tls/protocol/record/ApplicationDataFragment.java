@@ -22,6 +22,8 @@
 
 package org.secomm.tls.protocol.record;
 
+import org.secomm.tls.protocol.TlsConstants;
+import org.secomm.tls.protocol.record.handshake.InvalidHandshakeMessageType;
 import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
@@ -50,6 +52,6 @@ public class ApplicationDataFragment implements TlsFragment {
 
     @Override
     public byte getFragmentType() {
-        return FragmentTypes.APPLICATION_DATA;
+        return TlsConstants.APPLICATION_DATA;
     }
 }

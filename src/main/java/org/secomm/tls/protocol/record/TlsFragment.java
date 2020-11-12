@@ -23,6 +23,7 @@
 package org.secomm.tls.protocol.record;
 
 import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
+import org.secomm.tls.protocol.record.handshake.InvalidHandshakeMessageType;
 import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;

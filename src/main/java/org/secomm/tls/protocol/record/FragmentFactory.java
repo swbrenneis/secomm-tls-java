@@ -22,6 +22,9 @@
 
 package org.secomm.tls.protocol.record;
 
+import org.secomm.tls.protocol.TlsConstants;
+import org.secomm.tls.protocol.record.handshake.InvalidHandshakeMessageType;
+
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -33,10 +36,10 @@ public class FragmentFactory {
     }
 
     private static final Map<Byte, FragmentBuilder<?>> contentMap = Stream.of( new Object[][] {
-            { FragmentTypes.CHANGE_CIPHER_SPEC, new ChangeCipherSpecFragment.Builder() },
-            { FragmentTypes.ALERT, new AlertFragment.Builder() },
-            { FragmentTypes.HANDSHAKE, new HandshakeFragment.Builder() },
-            { FragmentTypes.APPLICATION_DATA, new ApplicationDataFragment.Builder() }
+            { TlsConstants.CHANGE_CIPHER_SPEC, new ChangeCipherSpecFragment.Builder() },
+            { TlsConstants.ALERT, new AlertFragment.Builder() },
+            { TlsConstants.HANDSHAKE, new HandshakeFragment.Builder() },
+            { TlsConstants.APPLICATION_DATA, new ApplicationDataFragment.Builder() }
     }).collect(Collectors.toMap(e -> (Byte) e[0], e -> (FragmentBuilder<?>) e[1]));
 
     public static <T extends TlsFragment> T getContent(byte type)

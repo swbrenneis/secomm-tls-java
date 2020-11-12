@@ -22,6 +22,7 @@
 
 package org.secomm.tls.protocol.record;
 
+import org.secomm.tls.protocol.TlsConstants;
 import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
@@ -69,8 +70,12 @@ public class AlertFragment implements TlsFragment {
 
     private byte alertDescription;
 
-    public AlertFragment() {
+    public AlertFragment(byte alertLevel, byte alertDescription) {
+        this.alertLevel = alertLevel;
+        this.alertDescription = alertDescription;
+    }
 
+    public AlertFragment() {
     }
 
     @Override
@@ -81,7 +86,7 @@ public class AlertFragment implements TlsFragment {
 
     @Override
     public byte getFragmentType() {
-        return FragmentTypes.ALERT;
+        return TlsConstants.ALERT;
     }
 
     @Override
