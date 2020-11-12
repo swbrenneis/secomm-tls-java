@@ -20,7 +20,7 @@
  *
  */
 
-package org.secomm.tls.crypto;
+package org.secomm.tls.crypto.prf;
 
 public interface PRFAlgorithm {
 

@@ -20,7 +20,9 @@
  *
  */
 
-package org.secomm.tls.crypto;
+package org.secomm.tls.crypto.prf;
+
+import org.secomm.tls.crypto.AlgorithmFactory;
 
 public class TlsPrfSha256 implements PRFAlgorithm {
 
