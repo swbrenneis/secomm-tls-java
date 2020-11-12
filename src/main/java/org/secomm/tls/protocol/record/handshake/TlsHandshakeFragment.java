@@ -20,7 +20,9 @@
  *
  */
 
-package org.secomm.tls.protocol.record;
+package org.secomm.tls.protocol.record.handshake;
+
+import org.secomm.tls.protocol.record.TlsFragment;
 
 public interface TlsHandshakeFragment extends TlsFragment {
 
