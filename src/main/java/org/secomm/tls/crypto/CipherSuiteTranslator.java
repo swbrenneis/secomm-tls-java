@@ -38,32 +38,44 @@ public class CipherSuiteTranslator {
     private static final Map<Short, String> cipherAlgorithmMap =
             Stream.of(new Object[][] {
                     { (short) 0x0a, "TRIPLEDES" },
-                    { (short) 0x39, "AES" }
+                    { (short) 0x33, "AES" },
+                    { (short) 0x39, "AES" },
+                    { (short) 0x9c, "AES"}
     }).collect(Collectors.toMap(e -> (Short) e[0], e -> (String) e[1]));
 
     private static final Map<Short, String> cipherTypeMap = Stream.of( new Object[][] {
             { (short) 0x0a, "BLOCK" },
-            { (short) 0x39, "BLOCK" }
+            { (short) 0x33, "BLOCK" },
+            { (short) 0x39, "BLOCK" },
+            { (short) 0x9c, "AEAD"}
     }).collect(Collectors.toMap(e -> (Short) e[0], e -> (String) e[1]));
 
     private static final Map<Short, String> macAlgorithmMap = Stream.of(new Object[][] {
             { (short) 0x0a, "HMAC_SHA1" },
-            { (short) 0x39, "HMAC_SHA1" }
+            { (short) 0x33, "HMAC_SHA1" },
+            { (short) 0x39, "HMAC_SHA1" },
+            { (short) 0x9c, "HMAC_SHA256"}
     }).collect(Collectors.toMap(e -> (Short) e[0], e -> (String) e[1]));
 
     private static final Map<Short, String> keyExchangeAlgorithmMap = Stream.of(new Object[][] {
             { (short) 0x0a, KeyExchangeAlgorithm.DH_ANON.toString() },
-            { (short) 0x39, KeyExchangeAlgorithm.DHE_RSA.toString() }
+            { (short) 0x33, KeyExchangeAlgorithm.DHE_RSA.toString() },
+            { (short) 0x39, KeyExchangeAlgorithm.DHE_RSA.toString() },
+            { (short) 0x9c, KeyExchangeAlgorithm.RSA.toString() }
     }).collect(Collectors.toMap(e -> (Short) e[0], e -> (String) e[1]));
 
     private static final Map<Short, Byte> encryptionKeyLengthMap = Stream.of(new Object[][] {
             { (short) 0x0a, (byte) 160 },
-            { (short) 0x39, (byte) 256 }
+            { (short) 0x33, (byte) 128 },
+            { (short) 0x39, (byte) 256 },
+            { (short) 0x9c, (byte) 128 }
     }).collect(Collectors.toMap(e -> (short) e[0], e -> (byte) e[1]));
 
     private static final Map<Short, Byte> macLengthMap = Stream.of(new Object[][] {
             { (short) 0x0a, (byte) 160 },
-            { (short) 0x39, (byte) 160 }
+            { (short) 0x33, (byte) 160 },
+            { (short) 0x39, (byte) 160 },
+            { (short) 0x9c, (byte) 256 }
     }).collect(Collectors.toMap(e -> (short) e[0], e -> (byte) e[1]));
 
     public static void setSecurityParameters(SecurityParameters parameters, short cipherSuite)

@@ -51,7 +51,7 @@ public class HandshakeFragment implements TlsHandshakeFragment {
 
     public HandshakeFragment(TlsHandshakeMessage handshake) {
         this.message = handshake;
-        this.messageType = handshake.getHandshakeType();
+        this.messageType = handshake.getHandshakeMessageType();
     }
 
     public HandshakeFragment() {
@@ -88,5 +88,11 @@ public class HandshakeFragment implements TlsHandshakeFragment {
     @Override
     public byte getFragmentType() {
         return TlsConstants.HANDSHAKE;
+    }
+
+    @Override
+    public void setHandshakeMessage(TlsHandshakeMessage message) {
+        this.messageType = message.getHandshakeMessageType();
+        this.message = message;
     }
 }

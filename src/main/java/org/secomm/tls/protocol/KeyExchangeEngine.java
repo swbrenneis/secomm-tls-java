@@ -22,18 +22,25 @@
 
 package org.secomm.tls.protocol;
 
+import org.bouncycastle.crypto.AsymmetricCipherKeyPair;
+import org.bouncycastle.crypto.agreement.DHAgreement;
+import org.bouncycastle.crypto.generators.DHKeyPairGenerator;
+import org.bouncycastle.crypto.params.DHKeyGenerationParameters;
+import org.bouncycastle.crypto.params.DHParameters;
+import org.bouncycastle.crypto.params.DHPrivateKeyParameters;
+import org.bouncycastle.crypto.params.DHPublicKeyParameters;
+import org.bouncycastle.crypto.params.ParametersWithRandom;
 import org.secomm.tls.crypto.CipherSuiteTranslator;
 import org.secomm.tls.crypto.cipher.RSACipher;
-import org.secomm.tls.crypto.signature.RSASignatureWithDigest;
 import org.secomm.tls.crypto.signature.SignedDigest;
 import org.secomm.tls.crypto.signature.SignedDigestFactory;
+import org.secomm.tls.protocol.record.handshake.ClientKeyExchange;
 import org.secomm.tls.protocol.record.handshake.ServerKeyExchange;
 import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
 
@@ -60,6 +67,8 @@ public class KeyExchangeEngine {
     private CipherSuiteTranslator.KeyExchangeAlgorithm keyExchangeAlgorithm;
 
     private BigInteger dhPrivateKey;
+
+    private BigInteger dhPublicKey;
 
     public KeyExchangeEngine(final SecurityParameters securityParameters, final SecureRandom random) {
         this.securityParameters = securityParameters;
@@ -103,14 +112,16 @@ public class KeyExchangeEngine {
                 || keyExchangeAlgorithm == CipherSuiteTranslator.KeyExchangeAlgorithm.DHE_DSS;
     }
 
-    public byte[] generatePremasterSecret()
+    public ClientKeyExchange generateClientKeyExchange()
             throws InvalidKeyException {
 
+        ClientKeyExchange clientKeyExchange = new ClientKeyExchange();
         if (keyExchangeAlgorithm == CipherSuiteTranslator.KeyExchangeAlgorithm.RSA) {
-            return generateRSAPremasteredSecret();
+            clientKeyExchange.setPremasterSecret(generateRSAPremasteredSecret());
         } else {
-            return generateDHPublicKey();
+            clientKeyExchange.setClientPublicKey(generateDHPublicKey());
         }
+        return clientKeyExchange;
     }
 
     private byte[] generateRSAPremasteredSecret() throws InvalidKeyException {
@@ -127,7 +138,28 @@ public class KeyExchangeEngine {
     }
 
     private byte[] generateDHPublicKey() {
-        return new  byte[0];
+
+        // Generate the key pair
+        DHKeyPairGenerator generator = new DHKeyPairGenerator();
+        // We have to prepend a zero byte so that BigInteger doesn't sign extend
+        // if the msb is 1.
+        EncodingByteBuffer pBuffer = EncodingByteBuffer.allocate(serverDHParameters.dh_p.length + 1);
+        pBuffer.put((byte) 0);
+        pBuffer.put(serverDHParameters.dh_p);
+        BigInteger p = new BigInteger(pBuffer.toArray());
+        // Do the same for the generator in case someone picks something other than 2.
+        EncodingByteBuffer gBuffer = EncodingByteBuffer.allocate(serverDHParameters.dh_p.length + 1);
+        gBuffer.put((byte) 0);
+        gBuffer.put(serverDHParameters.dh_g);
+        BigInteger g = new BigInteger(gBuffer.toArray());
+//        BigInteger q = p.multiply(BigInteger.TWO).add(BigInteger.ONE);
+//        int l = serverDHParameters.dh_p.length * 8;
+//        generator.init(new DHKeyGenerationParameters(random, new DHParameters(p, g, q, l)));
+        generator.init(new DHKeyGenerationParameters(random, new DHParameters(p, g)));
+        AsymmetricCipherKeyPair keyPair = generator.generateKeyPair();
+        dhPrivateKey = ((DHPrivateKeyParameters)keyPair.getPrivate()).getX();
+        dhPublicKey = ((DHPublicKeyParameters)keyPair.getPublic()).getY();
+        return dhPublicKey.toByteArray();
     }
 
     public void setServerCertificate(Certificate serverCertificate) {

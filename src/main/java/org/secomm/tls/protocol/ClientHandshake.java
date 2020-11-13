@@ -24,8 +24,6 @@ package org.secomm.tls.protocol;
 
 import org.secomm.tls.api.TlsPeer;
 import org.secomm.tls.crypto.CipherSuiteTranslator;
-import org.secomm.tls.crypto.cipher.RSACipher;
-import org.secomm.tls.crypto.signature.RSASignatureWithDigest;
 import org.secomm.tls.protocol.record.AlertFragment;
 import org.secomm.tls.protocol.record.RecordLayerException;
 import org.secomm.tls.protocol.record.extensions.TlsExtension;
@@ -143,7 +141,7 @@ public class ClientHandshake {
             TlsPlaintextRecord record = recordLayer.readPlaintextRecord();
             HandshakeFragment fragment = record.getFragment();
             TlsHandshakeMessage handshakeMessage = fragment.getHandshakeMessage();
-            switch (handshakeMessage.getHandshakeType()) {
+            switch (handshakeMessage.getHandshakeMessageType()) {
                 case HandshakeMessageTypes.SERVER_HELLO:
                     if (handshakeStep == HandshakeStep.CLIENT_HELLO) {
                         ServerHello serverHello = (ServerHello) handshakeMessage;
@@ -198,14 +196,8 @@ public class ClientHandshake {
             if (keyExchangeEngine.isSigned() && !keyExchangeEngine.verifySignatureWithHash()) {
                     throw new HandshakeException(AlertFragment.DECRYPT_ERROR);
             }
-            byte[] premasterSecret = keyExchangeEngine.generatePremasterSecret();
-            ClientKeyExchange clientKeyExchange = new ClientKeyExchange(premasterSecret);
-            if  (keyExchangeAlgorithm == CipherSuiteTranslator.KeyExchangeAlgorithm.RSA) {
-                clientKeyExchange = new ClientKeyExchange();
-            } else {
-
-            }
-            recordLayer.sendHandshakeRecord(clientKeyExchange);
+            recordLayer.sendHandshakeRecord(keyExchangeEngine.generateClientKeyExchange());
+            nextRecord();
         } catch (HandshakeException e) {
             throw e;
         } catch (Exception e) {

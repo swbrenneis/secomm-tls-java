@@ -72,7 +72,7 @@ public class ServerCertificate implements TlsHandshakeMessage {
     }
 
     @Override
-    public byte getHandshakeType() {
+    public byte getHandshakeMessageType() {
         return HandshakeMessageTypes.CERTIFICATE;
     }
 

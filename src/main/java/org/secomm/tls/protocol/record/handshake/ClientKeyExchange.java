@@ -39,19 +39,19 @@ public class ClientKeyExchange implements TlsHandshakeMessage {
     public ClientKeyExchange() {
     }
 
-    public ClientKeyExchange(byte[] rsaEncryptedSecret) {
-        this.rsaEncryptedSecret = rsaEncryptedSecret;
-    }
+    private byte[] premasterSecret;
 
-    private byte[] rsaEncryptedSecret;
+    private byte[] clientPublicKey;
 
     @Override
     public byte[] encode() {
         EncodingByteBuffer buffer = EncodingByteBuffer.allocate(1024);
         if (CipherSuiteTranslator.getKeyExchangeAlgorithm() == CipherSuiteTranslator.KeyExchangeAlgorithm.RSA) {
-            buffer.putShort((short) rsaEncryptedSecret.length);
-            buffer.put(rsaEncryptedSecret);
+            buffer.putShort((short) premasterSecret.length);
+            buffer.put(premasterSecret);
         } else {
+            buffer.putShort((short) clientPublicKey.length);
+            buffer.put(clientPublicKey);
         }
         return buffer.toArray();
     }
@@ -60,15 +60,25 @@ public class ClientKeyExchange implements TlsHandshakeMessage {
     public void decode(EncodingByteBuffer handshakeBuffer) throws IOException, InvalidExtensionTypeException {
         if (CipherSuiteTranslator.getKeyExchangeAlgorithm() == CipherSuiteTranslator.KeyExchangeAlgorithm.RSA) {
             short secretLength = handshakeBuffer.getShort();
-            rsaEncryptedSecret = new byte[secretLength];
-            handshakeBuffer.get(rsaEncryptedSecret);
+            premasterSecret = new byte[secretLength];
+            handshakeBuffer.get(premasterSecret);
         } else {
+            short keyLength = handshakeBuffer.getShort();
+            clientPublicKey = new byte[keyLength];
+            handshakeBuffer.get(clientPublicKey);
         }
     }
 
     @Override
-    public byte getHandshakeType() {
+    public byte getHandshakeMessageType() {
         return HandshakeMessageTypes.CLIENT_KEY_EXCHANGE;
     }
 
+    public void setPremasterSecret(byte[] premasterSecret) {
+        this.premasterSecret = premasterSecret;
+    }
+
+    public void setClientPublicKey(byte[] clientPublicKey) {
+        this.clientPublicKey = clientPublicKey;
+    }
 }

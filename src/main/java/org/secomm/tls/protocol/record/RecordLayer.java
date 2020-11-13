@@ -99,7 +99,7 @@ public class RecordLayer {
         connectionManager.write(buffer, new CompletionHandler<Integer, ConnectionManager>() {
             @Override
             public void completed(Integer result, ConnectionManager attachment) {
-
+                // Nothing to do here
             }
 
             @Override

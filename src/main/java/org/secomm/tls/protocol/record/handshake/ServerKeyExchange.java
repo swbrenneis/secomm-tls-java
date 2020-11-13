@@ -116,7 +116,7 @@ public class ServerKeyExchange implements TlsHandshakeMessage {
     }
 
     @Override
-    public byte getHandshakeType() {
+    public byte getHandshakeMessageType() {
         return HandshakeMessageTypes.SERVER_KEY_EXCHANGE;
     }
 

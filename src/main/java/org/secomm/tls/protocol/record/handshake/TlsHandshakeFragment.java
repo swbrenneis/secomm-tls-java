@@ -27,4 +27,6 @@ import org.secomm.tls.protocol.record.TlsFragment;
 public interface TlsHandshakeFragment extends TlsFragment {
 
     <T extends TlsHandshakeMessage> T getHandshakeMessage();
+
+    void setHandshakeMessage(TlsHandshakeMessage message);
 }

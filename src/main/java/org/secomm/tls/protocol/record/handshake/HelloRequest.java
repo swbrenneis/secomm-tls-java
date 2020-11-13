@@ -48,7 +48,7 @@ public class HelloRequest implements TlsHandshakeMessage {
     }
 
     @Override
-    public byte getHandshakeType() {
+    public byte getHandshakeMessageType() {
         return HandshakeMessageTypes.HELLO_REQUEST;
     }
 }

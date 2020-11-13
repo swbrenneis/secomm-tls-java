@@ -157,7 +157,7 @@ public class ClientHello implements TlsHandshakeMessage {
     }
 
     @Override
-    public byte getHandshakeType() {
+    public byte getHandshakeMessageType() {
         return HandshakeMessageTypes.CLIENT_HELLO;
     }
 

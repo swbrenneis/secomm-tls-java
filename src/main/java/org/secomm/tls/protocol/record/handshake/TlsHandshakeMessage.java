@@ -36,5 +36,5 @@ public interface TlsHandshakeMessage {
 
     void decode(EncodingByteBuffer handshakeBuffer) throws IOException, InvalidExtensionTypeException;
 
-    byte getHandshakeType();
+    byte getHandshakeMessageType();
 }

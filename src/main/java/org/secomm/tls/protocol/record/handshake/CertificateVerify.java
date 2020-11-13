@@ -39,7 +39,7 @@ public class CertificateVerify implements TlsHandshakeMessage {
     }
 
     @Override
-    public byte getHandshakeType() {
+    public byte getHandshakeMessageType() {
         return 0;
     }
 }

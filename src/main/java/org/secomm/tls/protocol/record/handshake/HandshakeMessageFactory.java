@@ -37,7 +37,8 @@ public class HandshakeMessageFactory {
             { HandshakeMessageTypes.SERVER_HELLO, new ServerHello.Builder() },
             { HandshakeMessageTypes.CERTIFICATE, new ServerCertificate.Builder() },
             { HandshakeMessageTypes.SERVER_KEY_EXCHANGE, new ServerKeyExchange.Builder() },
-            { HandshakeMessageTypes.SERVER_HELLO_DONE, new ServerHelloDone.Builder() }
+            { HandshakeMessageTypes.SERVER_HELLO_DONE, new ServerHelloDone.Builder() },
+            { HandshakeMessageTypes.CLIENT_KEY_EXCHANGE, new ClientKeyExchange.Builder() }
     }).collect(Collectors.toMap(e -> (Byte) e[0], e -> (HandshakeBuilder<?>) e[1]));
 
     public static <T extends TlsHandshakeMessage> T getHandshake(byte handshakeType) throws InvalidHandshakeMessageType {
