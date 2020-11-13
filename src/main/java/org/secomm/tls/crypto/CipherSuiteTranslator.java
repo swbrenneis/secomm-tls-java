@@ -22,7 +22,6 @@
 
 package org.secomm.tls.crypto;
 
-import org.bouncycastle.jcajce.provider.asymmetric.RSA;
 import org.secomm.tls.protocol.SecurityParameters;
 import org.secomm.tls.protocol.UnknownCipherSuiteException;
 
@@ -32,11 +31,9 @@ import java.util.stream.Stream;
 
 public class CipherSuiteTranslator {
 
-    public enum KeyExchangeAlgorithms { DH_ANON, DHE_RSA, DHE_DSS, RSA, DH_RSA, DH_DSS }
+    public enum KeyExchangeAlgorithm { DH_ANON, DHE_RSA, DHE_DSS, RSA, DH_RSA, DH_DSS }
 
-    private static short currentCipherSuite;
-
-    private static KeyExchangeAlgorithms currentKeyExchangeAlgorithm;
+    private static KeyExchangeAlgorithm keyExchangeAlgorithm;
 
     private static final Map<Short, String> cipherAlgorithmMap =
             Stream.of(new Object[][] {
@@ -55,8 +52,8 @@ public class CipherSuiteTranslator {
     }).collect(Collectors.toMap(e -> (Short) e[0], e -> (String) e[1]));
 
     private static final Map<Short, String> keyExchangeAlgorithmMap = Stream.of(new Object[][] {
-            { (short) 0x0a, KeyExchangeAlgorithms.DH_ANON.toString() },
-            { (short) 0x39, KeyExchangeAlgorithms.DHE_RSA.toString() }
+            { (short) 0x0a, KeyExchangeAlgorithm.DH_ANON.toString() },
+            { (short) 0x39, KeyExchangeAlgorithm.DHE_RSA.toString() }
     }).collect(Collectors.toMap(e -> (Short) e[0], e -> (String) e[1]));
 
     private static final Map<Short, Byte> encryptionKeyLengthMap = Stream.of(new Object[][] {
@@ -72,8 +69,6 @@ public class CipherSuiteTranslator {
     public static void setSecurityParameters(SecurityParameters parameters, short cipherSuite)
             throws UnknownCipherSuiteException {
 
-        currentCipherSuite = cipherSuite;
-
         String algorithm = cipherAlgorithmMap.get(cipherSuite);
         if (algorithm == null) {
             throw new UnknownCipherSuiteException("Cipher suite " + cipherSuite);
@@ -84,7 +79,7 @@ public class CipherSuiteTranslator {
         parameters.setEncryptionKeyLength(encryptionKeyLengthMap.get(cipherSuite));
         parameters.setMacLength(macLengthMap.get(cipherSuite));
 
-        currentKeyExchangeAlgorithm = getKeyExchangeAlgorithm(cipherSuite);
+        keyExchangeAlgorithm = getKeyExchangeAlgorithm(cipherSuite);
     }
 
     /**
@@ -94,16 +89,17 @@ public class CipherSuiteTranslator {
      * @param cipherSuite
      * @return
      */
-    public static KeyExchangeAlgorithms getKeyExchangeAlgorithm(short cipherSuite) {
+    public static KeyExchangeAlgorithm getKeyExchangeAlgorithm(short cipherSuite) {
         String algorithm = keyExchangeAlgorithmMap.get(cipherSuite);
         if (algorithm != null) {
-            return KeyExchangeAlgorithms.valueOf(algorithm);
+            return KeyExchangeAlgorithm.valueOf(algorithm);
         } else {
             return null;
         }
     }
 
-    public static KeyExchangeAlgorithms getCurrentKeyExchangeAlgorithm() {
-        return currentKeyExchangeAlgorithm;
+    public static KeyExchangeAlgorithm getKeyExchangeAlgorithm() {
+        return keyExchangeAlgorithm;
     }
 }
+

@@ -24,6 +24,8 @@ package org.secomm.tls.protocol;
 
 import org.secomm.tls.api.TlsPeer;
 import org.secomm.tls.crypto.CipherSuiteTranslator;
+import org.secomm.tls.crypto.cipher.RSACipher;
+import org.secomm.tls.crypto.signature.RSASignatureWithDigest;
 import org.secomm.tls.protocol.record.AlertFragment;
 import org.secomm.tls.protocol.record.RecordLayerException;
 import org.secomm.tls.protocol.record.extensions.TlsExtension;
@@ -76,7 +78,7 @@ public class ClientHandshake {
 
     private Throwable reason;
 
-    private CipherSuiteTranslator.KeyExchangeAlgorithms keyExchangeAlgorithm;
+    private CipherSuiteTranslator.KeyExchangeAlgorithm keyExchangeAlgorithm;
 
     private final KeyExchangeEngine keyExchangeEngine;
 
@@ -87,6 +89,8 @@ public class ClientHandshake {
     private List<TlsExtension> extensions;
 
     private List<Short> cipherSuites;
+
+    private short cipherSuite;
 
     private final SecureRandom random;
 
@@ -191,17 +195,13 @@ public class ClientHandshake {
     private void startClientResponse() throws HandshakeException {
 
         try {
-            short cipherSuite = handshakeMessages.serverHello.getCipherSuite();
-            if (keyExchangeEngine.isSigned(cipherSuite)) {
-                if (!keyExchangeEngine.verifySignatureWithHash()) {
+            if (keyExchangeEngine.isSigned() && !keyExchangeEngine.verifySignatureWithHash()) {
                     throw new HandshakeException(AlertFragment.DECRYPT_ERROR);
-                }
             }
             byte[] premasterSecret = keyExchangeEngine.generatePremasterSecret();
-            ClientKeyExchange clientKeyExchange = null;
-            if  (CipherSuiteTranslator.getCurrentKeyExchangeAlgorithm() ==
-                    CipherSuiteTranslator.KeyExchangeAlgorithms.RSA) {
-                clientKeyExchange = new ClientKeyExchange(rsaEncryptSecret());
+            ClientKeyExchange clientKeyExchange = new ClientKeyExchange(premasterSecret);
+            if  (keyExchangeAlgorithm == CipherSuiteTranslator.KeyExchangeAlgorithm.RSA) {
+                clientKeyExchange = new ClientKeyExchange();
             } else {
 
             }
@@ -218,8 +218,10 @@ public class ClientHandshake {
         try {
             handshakeMessages.serverHello = serverHello;
             keyExchangeEngine.setServerRandom(serverHello.getServerRandom());
-            short cipherSuite = serverHello.getCipherSuite();
+            cipherSuite = serverHello.getCipherSuite();
             CipherSuiteTranslator.setSecurityParameters(connectionState.getSecurityParameters(), cipherSuite);
+            keyExchangeAlgorithm = CipherSuiteTranslator.getKeyExchangeAlgorithm(cipherSuite);
+            keyExchangeEngine.setKeyExchangeAlgorithm(keyExchangeAlgorithm);
             handshakeStep = HandshakeStep.SERVER_HELLO;
             nextRecord();
         } catch (UnknownCipherSuiteException e) {
@@ -253,10 +255,6 @@ public class ClientHandshake {
         handshakeMessages.certificateRequest = certificateRequest;
         handshakeStep = HandshakeStep.CERTIFICATE_REQUEST;
         nextRecord();
-    }
-
-    private byte[] rsaEncryptSecret() {
-        return new byte[0];
     }
 
     private void setServerCertificateChain(ServerCertificate serverCertificate) {

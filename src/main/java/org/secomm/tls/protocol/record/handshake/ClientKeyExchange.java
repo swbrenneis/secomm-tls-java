@@ -27,7 +27,6 @@ import org.secomm.tls.protocol.record.extensions.InvalidExtensionTypeException;
 import org.secomm.tls.util.EncodingByteBuffer;
 
 import java.io.IOException;
-import java.security.InvalidParameterException;
 
 public class ClientKeyExchange implements TlsHandshakeMessage {
 
@@ -49,7 +48,7 @@ public class ClientKeyExchange implements TlsHandshakeMessage {
     @Override
     public byte[] encode() {
         EncodingByteBuffer buffer = EncodingByteBuffer.allocate(1024);
-        if (CipherSuiteTranslator.getCurrentKeyExchangeAlgorithm() == CipherSuiteTranslator.KeyExchangeAlgorithms.RSA) {
+        if (CipherSuiteTranslator.getKeyExchangeAlgorithm() == CipherSuiteTranslator.KeyExchangeAlgorithm.RSA) {
             buffer.putShort((short) rsaEncryptedSecret.length);
             buffer.put(rsaEncryptedSecret);
         } else {
@@ -59,7 +58,7 @@ public class ClientKeyExchange implements TlsHandshakeMessage {
 
     @Override
     public void decode(EncodingByteBuffer handshakeBuffer) throws IOException, InvalidExtensionTypeException {
-        if (CipherSuiteTranslator.getCurrentKeyExchangeAlgorithm() == CipherSuiteTranslator.KeyExchangeAlgorithms.RSA) {
+        if (CipherSuiteTranslator.getKeyExchangeAlgorithm() == CipherSuiteTranslator.KeyExchangeAlgorithm.RSA) {
             short secretLength = handshakeBuffer.getShort();
             rsaEncryptedSecret = new byte[secretLength];
             handshakeBuffer.get(rsaEncryptedSecret);

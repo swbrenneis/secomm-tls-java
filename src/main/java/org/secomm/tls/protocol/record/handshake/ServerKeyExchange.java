@@ -54,7 +54,7 @@ public class ServerKeyExchange implements TlsHandshakeMessage {
     @Override
     public byte[] encode() {
         EncodingByteBuffer buffer = EncodingByteBuffer.allocate(2048);
-        switch(CipherSuiteTranslator.getCurrentKeyExchangeAlgorithm()) {
+        switch(CipherSuiteTranslator.getKeyExchangeAlgorithm()) {
             case DH_ANON:
                 encodeDHParameters(buffer);
                 break;
@@ -74,7 +74,7 @@ public class ServerKeyExchange implements TlsHandshakeMessage {
     @Override
     public void decode(EncodingByteBuffer handshakeBuffer) {
 
-        switch (CipherSuiteTranslator.getCurrentKeyExchangeAlgorithm()) {
+        switch (CipherSuiteTranslator.getKeyExchangeAlgorithm()) {
             case DH_ANON:
                 decodeDHParameters(handshakeBuffer);
                 break;

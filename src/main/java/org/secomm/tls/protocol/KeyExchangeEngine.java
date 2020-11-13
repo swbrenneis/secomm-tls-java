@@ -23,13 +23,17 @@
 package org.secomm.tls.protocol;
 
 import org.secomm.tls.crypto.CipherSuiteTranslator;
+import org.secomm.tls.crypto.cipher.RSACipher;
+import org.secomm.tls.crypto.signature.RSASignatureWithDigest;
 import org.secomm.tls.crypto.signature.SignedDigest;
 import org.secomm.tls.crypto.signature.SignedDigestFactory;
 import org.secomm.tls.protocol.record.handshake.ServerKeyExchange;
 import org.secomm.tls.util.EncodingByteBuffer;
 
+import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
 
@@ -52,6 +56,10 @@ public class KeyExchangeEngine {
     private ServerKeyExchange.ServerDHParameters serverDHParameters;
 
     private byte[] dhParametersSignature;
+
+    private CipherSuiteTranslator.KeyExchangeAlgorithm keyExchangeAlgorithm;
+
+    private BigInteger dhPrivateKey;
 
     public KeyExchangeEngine(final SecurityParameters securityParameters, final SecureRandom random) {
         this.securityParameters = securityParameters;
@@ -90,10 +98,36 @@ public class KeyExchangeEngine {
         return signedDigest.verify(dhParametersSignature);
     }
 
-    public boolean isSigned(short cipherSuite) {
-        CipherSuiteTranslator.KeyExchangeAlgorithms algorithm = CipherSuiteTranslator.getKeyExchangeAlgorithm(cipherSuite);
-        return algorithm == CipherSuiteTranslator.KeyExchangeAlgorithms.DHE_RSA
-                || algorithm == CipherSuiteTranslator.KeyExchangeAlgorithms.DHE_DSS;
+    public boolean isSigned() {
+        return keyExchangeAlgorithm == CipherSuiteTranslator.KeyExchangeAlgorithm.DHE_RSA
+                || keyExchangeAlgorithm == CipherSuiteTranslator.KeyExchangeAlgorithm.DHE_DSS;
+    }
+
+    public byte[] generatePremasterSecret()
+            throws InvalidKeyException {
+
+        if (keyExchangeAlgorithm == CipherSuiteTranslator.KeyExchangeAlgorithm.RSA) {
+            return generateRSAPremasteredSecret();
+        } else {
+            return generateDHPublicKey();
+        }
+    }
+
+    private byte[] generateRSAPremasteredSecret() throws InvalidKeyException {
+
+        byte[] premasterRandom = new byte[46];
+        random.nextBytes(premasterRandom);
+        EncodingByteBuffer buffer = EncodingByteBuffer.allocate(48);
+        buffer.put(supportedVersion);
+        buffer.put(premasterRandom);
+        byte[] secretBytes =  buffer.toArray();
+        RSACipher cipher = new RSACipher();
+        cipher.initialize(serverCertificate.getPublicKey());
+        return cipher.encrypt(secretBytes);
+    }
+
+    private byte[] generateDHPublicKey() {
+        return new  byte[0];
     }
 
     public void setServerCertificate(Certificate serverCertificate) {
@@ -120,13 +154,7 @@ public class KeyExchangeEngine {
         this.dhParametersSignature = dhParametersSignature;
     }
 
-    public byte[] generatePremasterSecret() {
-
-        byte[] premasterRandom = new byte[46];
-        random.nextBytes(premasterRandom);
-        EncodingByteBuffer buffer = EncodingByteBuffer.allocate(48);
-        buffer.put(supportedVersion);
-        buffer.put(premasterRandom);
-        return buffer.toArray();
+    public void setKeyExchangeAlgorithm(CipherSuiteTranslator.KeyExchangeAlgorithm keyExchangeAlgorithm) {
+        this.keyExchangeAlgorithm = keyExchangeAlgorithm;
     }
 }
