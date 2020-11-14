@@ -64,7 +64,7 @@ public class ServerCertificate implements TlsHandshakeMessage {
         while (tempLength > 0) {
             int certLength = handshakeBuffer.get24Bit();
             tempLength -= 3;
-            byte[] certBytes = new byte[tempLength];
+            byte[] certBytes = new byte[certLength];
             handshakeBuffer.get(certBytes);
             certificateChain.add(certBytes);
             tempLength -= certLength;

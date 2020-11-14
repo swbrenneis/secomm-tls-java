@@ -22,6 +22,7 @@
 
 package org.secomm.tls.test;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.secomm.tls.api.TlsClientContext;
 import org.secomm.tls.api.TlsContext;
@@ -64,8 +65,10 @@ public class APITest {
 
         context.setCipherSuites(CipherSuites.defaultCipherSuites);
         context.setExtensions(new ArrayList<>());   // No extensions
-        TlsPeer peer = context.connect("www.example.com", 443);
+        TlsPeer peer = context.connect("localhost", 5556);
+//        TlsPeer peer = context.connect("www.example.com", 443);
 //        TlsPeer peer = context.connect("206.74.33.52", 9100);
+        Assert.assertNotNull(peer);
     }
 
     @Test
